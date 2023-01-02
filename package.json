@@ -51,7 +51,6 @@
   "devDependencies": {
     "@luxass/eslint-config": "^2.2.4",
     "@types/node": "^18.11.17",
-    "@vitest/ui": "^0.26.3",
     "eslint": "^8.30.0",
     "tsup": "^6.5.0",
     "typescript": "^4.9.4",
