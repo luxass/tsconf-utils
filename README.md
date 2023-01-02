@@ -15,19 +15,31 @@ pnpm install tsconf-utils
 ## Usage
 
 ```ts
-import {  } from "tsconf-utils";
+import {
+  find,
+  findSync,
+  parseConfig,
+  parseConfigSync,
+  resolveConfig,
+  resolveConfigSync
+} from "tsconf-utils";
 
-// From file async
-const jsonCFile = await parseFile("./config.jsonc");
+// Find tsconfig.json files
+const path = await find();
 
-// From file
-const jsonCFile = parseFileSync("./config.jsonc");
+// Find tsconfig.json files synchronously
+const path = findSync();
 
-// From string
-const jsonC = parse(`
-{
-  "bar": "foo",
-  // This is a comment.
-  "foo": /* This is also a comment */ "bar",
-}`);
+// Parse tsconfig.json files
+const config = await parseConfig(path);
+
+// Parse tsconfig.json files synchronously
+const config = parseConfigSync(path);
+
+// Resolve tsconfig.json files (find and parse)
+const config = await resolveConfig(path);
+
+// Resolve tsconfig.json files synchronously (find and parse)
+const config = resolveConfigSync(path);
+
 ```
