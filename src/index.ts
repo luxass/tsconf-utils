@@ -50,7 +50,7 @@ export interface ResolveResult {
   files: string[]
 }
 
-export async function resolve(
+export async function resolveConfig(
   cwd: string = process.cwd(),
   name = "tsconfig.json"
 ): Promise<ResolveResult | null> {
@@ -59,7 +59,7 @@ export async function resolve(
     path = await find(cwd, name);
     
     if (!path) return null;
-    const { config, files } = await parse(path);
+    const { config, files } = await parseConfig(path);
 
     if (typeof config !== "object") {
       throw new SyntaxError(`Invalid JSON in ${path}`);
@@ -79,7 +79,7 @@ export async function resolve(
   }
 }
 
-export function resolveSync(
+export function resolveConfigSync(
   cwd: string = process.cwd(),
   name = "tsconfig.json"
 ): ResolveResult | null {
@@ -88,7 +88,7 @@ export function resolveSync(
     path = findSync(cwd, name);
 
     if (!path) return null;
-    const { config, files } = parseSync(path);
+    const { config, files } = parseConfigSync(path);
 
     if (typeof config !== "object") {
       throw new SyntaxError(`Invalid JSON in ${path}`);
@@ -113,7 +113,7 @@ export interface ParseResult {
   files: string[]
 }
 
-export async function parse(path: string): Promise<ParseResult> {
+export async function parseConfig(path: string): Promise<ParseResult> {
   const config = await parseFile(path);
   if (!config) {
     return {
@@ -133,7 +133,7 @@ export async function parse(path: string): Promise<ParseResult> {
       extendsPath = customRequire.resolve(config.extends, { paths: [configDir] });
     }
     
-    const extendsConfig = await parse(extendsPath);
+    const extendsConfig = await parseConfig(extendsPath);
     files = files.concat(extendsConfig.files);
     
     if (extendsConfig) {
@@ -164,7 +164,7 @@ export async function parse(path: string): Promise<ParseResult> {
   };
 }
 
-export function parseSync(path: string): ParseResult {
+export function parseConfigSync(path: string): ParseResult {
   const config = parseFileSync(path);
   if (!config) {
     return {
@@ -184,7 +184,7 @@ export function parseSync(path: string): ParseResult {
       extendsPath = customRequire.resolve(config.extends, { paths: [configDir] });
     }
     
-    const extendsConfig = parseSync(extendsPath);
+    const extendsConfig = parseConfigSync(extendsPath);
     files = files.concat(extendsConfig.files);
     
     if (extendsConfig) {

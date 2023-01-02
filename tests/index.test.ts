@@ -1,6 +1,6 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { find, findSync, parse, parseSync, resolve, resolveSync } from "../src";
+import { find, findSync, parseConfig, parseConfigSync, resolveConfig, resolveConfigSync } from "../src";
 
 describe("tsconf-utils", () => {
 
@@ -9,12 +9,12 @@ describe("tsconf-utils", () => {
     const configPath = await find(fwd, "tsconfig.json");
     
     it("parse - async", async () => {
-      const config = await parse(configPath!);
+      const config = await parseConfig(configPath!);
       expect(config).not.toBe(null);
     });
 
     it("parse - sync", () => {
-      const config = parseSync(configPath!);
+      const config = parseConfigSync(configPath!);
       expect(config).not.toBe(null);
     });
   });
@@ -22,12 +22,12 @@ describe("tsconf-utils", () => {
   describe("resolve", () => {
     const fwd = path.join(__dirname, "fixtures", "test-2");
     it("resolve - async", async () => {
-      const config = await resolve(fwd, "tsconfig.json");
+      const config = await resolveConfig(fwd, "tsconfig.json");
       expect(config).not.toBe(null);
     });
 
     it("resolve - sync", () => {
-      const config = resolveSync(fwd, "tsconfig.json");
+      const config = resolveConfigSync(fwd, "tsconfig.json");
       expect(config).not.toBe(null);
     });
   });

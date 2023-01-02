@@ -11,3 +11,23 @@
 ```bash
 pnpm install tsconf-utils
 ```
+
+## Usage
+
+```ts
+import {  } from "tsconf-utils";
+
+// From file async
+const jsonCFile = await parseFile("./config.jsonc");
+
+// From file
+const jsonCFile = parseFileSync("./config.jsonc");
+
+// From string
+const jsonC = parse(`
+{
+  "bar": "foo",
+  // This is a comment.
+  "foo": /* This is also a comment */ "bar",
+}`);
+```
