@@ -1,0 +1,60 @@
+{
+  "name": "@luxass/tsconf-utils",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Utils for TSConfig files",
+  "author": {
+    "name": "Lucas Norgaard",
+    "email": "lucasnrgaard@gmail.com",
+    "url": "https://luxass.dev"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/luxass/tsconf-utils",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luxass/tsconf-utils"
+  },
+  "bugs": {
+    "url": "https://github.com/luxass/tsconf-utils/issues"
+  },
+  "keywords": [
+    "tsconfig",
+    "tsconfig.json",
+    "config",
+    "resolve"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "packageManager": "pnpm@7.18.0",
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest --run",
+    "lint": "eslint --cache {src,tests}/**/*.ts"
+  },
+  "dependencies": {
+    "jsonc-parse": "^1.0.2"
+  },
+  "devDependencies": {
+    "@luxass/eslint-config": "^2.2.4",
+    "@types/node": "^18.11.17",
+    "@vitest/ui": "^0.26.3",
+    "eslint": "^8.30.0",
+    "tsup": "^6.5.0",
+    "typescript": "^4.9.4",
+    "vitest": "^0.25.8"
+  }
+}
