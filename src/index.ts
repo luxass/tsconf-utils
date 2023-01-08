@@ -1,18 +1,20 @@
 import { statSync } from "node:fs";
 import { stat } from "node:fs/promises";
+import { createRequire } from "node:module";
 import {
   dirname,
   join,
   parse as pathParse,
   resolve as pathResolve
 } from "node:path";
-import { createRequire } from "module";
+
 import { parseFile, parseFileSync } from "jsonc-parse";
 
 const customRequire = createRequire(import.meta.url);
 
 export async function find(dir: string, name: string): Promise<string | null> {
-  while (dir) {
+  const root = pathParse(dir).root;
+  while (dir !== root) {
     const file = pathResolve(dir, name);
     try {
       const stats = await stat(file);
@@ -28,7 +30,8 @@ export async function find(dir: string, name: string): Promise<string | null> {
 }
 
 export function findSync(dir: string, name: string): string | null {
-  while (dir) {
+  const root = pathParse(dir).root;
+  while (dir !== root) {
     const file = pathResolve(dir, name);
     try {
       const stats = statSync(file);
@@ -45,9 +48,9 @@ export function findSync(dir: string, name: string): string | null {
 }
 
 export interface ResolveResult {
-  path: string
-  tsconfig: Record<string, any>
-  files: string[]
+  path: string;
+  tsconfig: Record<string, any>;
+  files: string[];
 }
 
 export async function resolveConfig(
@@ -57,7 +60,7 @@ export async function resolveConfig(
   let path;
   try {
     path = await find(cwd, name);
-    
+
     if (!path) return null;
     const { config, files } = await parseConfig(path);
 
@@ -109,8 +112,8 @@ export function resolveConfigSync(
 }
 
 export interface ParseResult {
-  config: Record<string, any>
-  files: string[]
+  config: Record<string, any>;
+  files: string[];
 }
 
 export async function parseConfig(path: string): Promise<ParseResult> {
@@ -130,12 +133,14 @@ export async function parseConfig(path: string): Promise<ParseResult> {
     if (config.extends.startsWith(".")) {
       extendsPath = await find(configDir, config.extends);
     } else {
-      extendsPath = customRequire.resolve(config.extends, { paths: [configDir] });
+      extendsPath = customRequire.resolve(config.extends, {
+        paths: [configDir]
+      });
     }
-    
+
     const extendsConfig = await parseConfig(extendsPath);
     files = files.concat(extendsConfig.files);
-    
+
     if (extendsConfig) {
       Object.assign(config, {
         ...extendsConfig.config,
@@ -175,18 +180,20 @@ export function parseConfigSync(path: string): ParseResult {
 
   const configDir = dirname(path);
   let files: string[] = [];
-  
+
   if (config.extends) {
     let extendsPath = config.extends;
     if (config.extends.startsWith(".")) {
       extendsPath = findSync(configDir, config.extends);
     } else {
-      extendsPath = customRequire.resolve(config.extends, { paths: [configDir] });
+      extendsPath = customRequire.resolve(config.extends, {
+        paths: [configDir]
+      });
     }
-    
+
     const extendsConfig = parseConfigSync(extendsPath);
     files = files.concat(extendsConfig.files);
-    
+
     if (extendsConfig) {
       Object.assign(config, {
         ...extendsConfig.config,
