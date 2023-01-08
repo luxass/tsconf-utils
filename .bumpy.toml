@@ -1,0 +1,3 @@
+[packages.tsconf-utils]
+type = "npm"
+path = "package.json"
