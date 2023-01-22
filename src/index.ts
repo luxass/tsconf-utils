@@ -12,7 +12,10 @@ import { parseFile, parseFileSync } from "jsonc-parse";
 
 const customRequire = createRequire(import.meta.url);
 
-export async function find(dir: string, name: string): Promise<string | null> {
+export async function findTSConfig(
+  dir: string,
+  name: string
+): Promise<string | null> {
   const root = pathParse(dir).root;
   while (dir !== root) {
     const file = pathResolve(dir, name);
@@ -29,7 +32,7 @@ export async function find(dir: string, name: string): Promise<string | null> {
   return null;
 }
 
-export function findSync(dir: string, name: string): string | null {
+export function findTSConfigSync(dir: string, name: string): string | null {
   const root = pathParse(dir).root;
   while (dir !== root) {
     const file = pathResolve(dir, name);
@@ -53,16 +56,16 @@ export interface ResolveResult {
   files: string[];
 }
 
-export async function resolveConfig(
+export async function resolveTSConfig(
   cwd: string = process.cwd(),
   name = "tsconfig.json"
 ): Promise<ResolveResult | null> {
   let path;
   try {
-    path = await find(cwd, name);
+    path = await findTSConfig(cwd, name);
 
     if (!path) return null;
-    const { config, files } = await parseConfig(path);
+    const { config, files } = await parseTSConfig(path);
 
     if (typeof config !== "object") {
       throw new SyntaxError(`Invalid JSON in ${path}`);
@@ -82,16 +85,16 @@ export async function resolveConfig(
   }
 }
 
-export function resolveConfigSync(
+export function resolveTSConfigSync(
   cwd: string = process.cwd(),
   name = "tsconfig.json"
 ): ResolveResult | null {
   let path;
   try {
-    path = findSync(cwd, name);
+    path = findTSConfigSync(cwd, name);
 
     if (!path) return null;
-    const { config, files } = parseConfigSync(path);
+    const { config, files } = parseTSConfigSync(path);
 
     if (typeof config !== "object") {
       throw new SyntaxError(`Invalid JSON in ${path}`);
@@ -116,7 +119,7 @@ export interface ParseResult {
   files: string[];
 }
 
-export async function parseConfig(path: string): Promise<ParseResult> {
+export async function parseTSConfig(path: string): Promise<ParseResult> {
   const config = await parseFile(path);
   if (!config) {
     return {
@@ -131,14 +134,14 @@ export async function parseConfig(path: string): Promise<ParseResult> {
   if (config.extends) {
     let extendsPath = config.extends;
     if (config.extends.startsWith(".")) {
-      extendsPath = await find(configDir, config.extends);
+      extendsPath = await findTSConfig(configDir, config.extends);
     } else {
       extendsPath = customRequire.resolve(config.extends, {
         paths: [configDir]
       });
     }
 
-    const extendsConfig = await parseConfig(extendsPath);
+    const extendsConfig = await parseTSConfig(extendsPath);
     files = files.concat(extendsConfig.files);
 
     if (extendsConfig) {
@@ -169,7 +172,7 @@ export async function parseConfig(path: string): Promise<ParseResult> {
   };
 }
 
-export function parseConfigSync(path: string): ParseResult {
+export function parseTSConfigSync(path: string): ParseResult {
   const config = parseFileSync(path);
   if (!config) {
     return {
@@ -184,14 +187,14 @@ export function parseConfigSync(path: string): ParseResult {
   if (config.extends) {
     let extendsPath = config.extends;
     if (config.extends.startsWith(".")) {
-      extendsPath = findSync(configDir, config.extends);
+      extendsPath = findTSConfigSync(configDir, config.extends);
     } else {
       extendsPath = customRequire.resolve(config.extends, {
         paths: [configDir]
       });
     }
 
-    const extendsConfig = parseConfigSync(extendsPath);
+    const extendsConfig = parseTSConfigSync(extendsPath);
     files = files.concat(extendsConfig.files);
 
     if (extendsConfig) {
