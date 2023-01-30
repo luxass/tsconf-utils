@@ -10,7 +10,7 @@ import {
 
 import { parseFile, parseFileSync } from "jsonc-parse";
 
-const customRequire = createRequire(import.meta.url);
+const _require = createRequire(import.meta.url);
 
 export async function findTSConfig(
   dir: string,
@@ -132,27 +132,32 @@ export async function parseTSConfig(path: string): Promise<ParseResult> {
   let files: string[] = [];
 
   if (config.extends) {
-    let extendsPath = config.extends;
-    if (config.extends.startsWith(".")) {
-      extendsPath = await findTSConfig(configDir, config.extends);
-    } else {
-      extendsPath = customRequire.resolve(config.extends, {
-        paths: [configDir]
-      });
-    }
+    const _extends = Array.isArray(config.extends)
+      ? config.extends
+      : [config.extends];
+    for (let extendsPath of _extends) {
+      
+      if (config.extends.startsWith(".")) {
+        extendsPath = await findTSConfig(configDir, config.extends);
+      } else {
+        extendsPath = _require.resolve(config.extends, {
+          paths: [configDir]
+        });
+      }
 
-    const extendsConfig = await parseTSConfig(extendsPath);
-    files = files.concat(extendsConfig.files);
+      const extendsConfig = await parseTSConfig(extendsPath);
+      files = files.concat(extendsConfig.files);
 
-    if (extendsConfig) {
-      Object.assign(config, {
-        ...extendsConfig.config,
-        ...config,
-        compilerOptions: {
-          ...extendsConfig.config.compilerOptions,
-          ...config.compilerOptions
-        }
-      });
+      if (extendsConfig) {
+        Object.assign(config, {
+          ...extendsConfig.config,
+          ...config,
+          compilerOptions: {
+            ...extendsConfig.config.compilerOptions,
+            ...config.compilerOptions
+          }
+        });
+      }
     }
   }
 
@@ -185,27 +190,31 @@ export function parseTSConfigSync(path: string): ParseResult {
   let files: string[] = [];
 
   if (config.extends) {
-    let extendsPath = config.extends;
-    if (config.extends.startsWith(".")) {
-      extendsPath = findTSConfigSync(configDir, config.extends);
-    } else {
-      extendsPath = customRequire.resolve(config.extends, {
-        paths: [configDir]
-      });
-    }
+    const _extends = Array.isArray(config.extends)
+      ? config.extends
+      : [config.extends];
+    for (let extendsPath of _extends) {
+      if (config.extends.startsWith(".")) {
+        extendsPath = findTSConfigSync(configDir, config.extends);
+      } else {
+        extendsPath = _require.resolve(config.extends, {
+          paths: [configDir]
+        });
+      }
 
-    const extendsConfig = parseTSConfigSync(extendsPath);
-    files = files.concat(extendsConfig.files);
+      const extendsConfig = parseTSConfigSync(extendsPath);
+      files = files.concat(extendsConfig.files);
 
-    if (extendsConfig) {
-      Object.assign(config, {
-        ...extendsConfig.config,
-        ...config,
-        compilerOptions: {
-          ...extendsConfig.config.compilerOptions,
-          ...config.compilerOptions
-        }
-      });
+      if (extendsConfig) {
+        Object.assign(config, {
+          ...extendsConfig.config,
+          ...config,
+          compilerOptions: {
+            ...extendsConfig.config.compilerOptions,
+            ...config.compilerOptions
+          }
+        });
+      }
     }
   }
 

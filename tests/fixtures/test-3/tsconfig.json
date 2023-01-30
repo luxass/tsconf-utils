@@ -1,0 +1,10 @@
+{
+  "extends": ["./tsconfig.base.json", "./tsconfig.base.old.json"],
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/server/*": ["server/*"]
+    }
+  }
+}
