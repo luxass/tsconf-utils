@@ -39,8 +39,8 @@ describe("resolve", () => {
   });
 });
 
-describe("resolve 3", () => {
-  const fwd = path.join(__dirname, "fixtures", "test-3");
+describe("resolve `extends` array", () => {
+  const fwd = path.join(__dirname, "fixtures", "extends-array");
   test("resolve - async", async () => {
     const config = await resolveTSConfig(fwd, "tsconfig.json");
     expect(config).not.toBe(null);
