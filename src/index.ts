@@ -137,10 +137,10 @@ export async function parseTSConfig(path: string): Promise<ParseResult> {
       : [config.extends];
     for (let extendsPath of _extends) {
       
-      if (config.extends.startsWith(".")) {
-        extendsPath = await findTSConfig(configDir, config.extends);
+      if (extendsPath.startsWith(".")) {
+        extendsPath = await findTSConfig(configDir, extendsPath);
       } else {
-        extendsPath = _require.resolve(config.extends, {
+        extendsPath = _require.resolve(extendsPath, {
           paths: [configDir]
         });
       }
@@ -194,10 +194,10 @@ export function parseTSConfigSync(path: string): ParseResult {
       ? config.extends
       : [config.extends];
     for (let extendsPath of _extends) {
-      if (config.extends.startsWith(".")) {
-        extendsPath = findTSConfigSync(configDir, config.extends);
+      if (extendsPath.startsWith(".")) {
+        extendsPath = findTSConfigSync(configDir, extendsPath);
       } else {
-        extendsPath = _require.resolve(config.extends, {
+        extendsPath = _require.resolve(extendsPath, {
           paths: [configDir]
         });
       }
