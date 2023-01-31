@@ -40,6 +40,19 @@ describe("tsconf-utils", () => {
     });
   });
 
+  describe("resolve 3", () => {
+    const fwd = path.join(__dirname, "fixtures", "test-3");
+    it("resolve - async", async () => {
+      const config = await resolveTSConfig(fwd, "tsconfig.json");
+      expect(config).not.toBe(null);
+    });
+
+    it("resolve - sync", () => {
+      const config = resolveTSConfigSync(fwd, "tsconfig.json");
+      expect(config).not.toBe(null);
+    });
+  });
+
   describe("find", () => {
     const fwd = path.join(__dirname, "fixtures", "test-1");
     it("find - async", async () => {
