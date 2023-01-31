@@ -136,7 +136,6 @@ export async function parseTSConfig(path: string): Promise<ParseResult> {
       ? config.extends
       : [config.extends];
     for (let extendsPath of _extends) {
-      
       if (extendsPath.startsWith(".")) {
         extendsPath = await findTSConfig(configDir, extendsPath);
       } else {
