@@ -132,11 +132,10 @@ export async function parseTSConfig(path: string): Promise<ParseResult> {
   let files: string[] = [];
 
   if (config.extends) {
-    const _extends = Array.isArray(config.extends)
-      ? config.extends
-      : [config.extends];
+    const _extends = Array.isArray(config.extends) ?
+      config.extends :
+        [config.extends];
     for (let extendsPath of _extends) {
-      
       if (extendsPath.startsWith(".")) {
         extendsPath = await findTSConfig(configDir, extendsPath);
       } else {
@@ -190,9 +189,9 @@ export function parseTSConfigSync(path: string): ParseResult {
   let files: string[] = [];
 
   if (config.extends) {
-    const _extends = Array.isArray(config.extends)
-      ? config.extends
-      : [config.extends];
+    const _extends = Array.isArray(config.extends) ?
+      config.extends :
+        [config.extends];
     for (let extendsPath of _extends) {
       if (extendsPath.startsWith(".")) {
         extendsPath = findTSConfigSync(configDir, extendsPath);
