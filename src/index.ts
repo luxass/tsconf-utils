@@ -50,11 +50,11 @@ export function findTSConfigSync(dir: string, name: string): string | null {
   return null;
 }
 
-export interface ResolveResult {
-  path: string;
-  tsconfig: Record<string, any>;
-  files: string[];
-}
+export type ResolveResult = {
+  path: string
+  tsconfig: Record<string, any>
+  files: string[]
+};
 
 export async function resolveTSConfig(
   cwd: string = process.cwd(),
@@ -114,10 +114,10 @@ export function resolveTSConfigSync(
   }
 }
 
-export interface ParseResult {
-  config: Record<string, any>;
-  files: string[];
-}
+export type ParseResult = {
+  config: Record<string, any>
+  files: string[]
+};
 
 export async function parseTSConfig(path: string): Promise<ParseResult> {
   const config = await parseFile(path);
@@ -132,9 +132,9 @@ export async function parseTSConfig(path: string): Promise<ParseResult> {
   let files: string[] = [];
 
   if (config.extends) {
-    const _extends = Array.isArray(config.extends)
-      ? config.extends
-      : [config.extends];
+    const _extends = Array.isArray(config.extends) ?
+      config.extends :
+        [config.extends];
     for (let extendsPath of _extends) {
       if (extendsPath.startsWith(".")) {
         extendsPath = await findTSConfig(configDir, extendsPath);
@@ -189,9 +189,9 @@ export function parseTSConfigSync(path: string): ParseResult {
   let files: string[] = [];
 
   if (config.extends) {
-    const _extends = Array.isArray(config.extends)
-      ? config.extends
-      : [config.extends];
+    const _extends = Array.isArray(config.extends) ?
+      config.extends :
+        [config.extends];
     for (let extendsPath of _extends) {
       if (extendsPath.startsWith(".")) {
         extendsPath = findTSConfigSync(configDir, extendsPath);
