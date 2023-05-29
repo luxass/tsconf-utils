@@ -1,8 +1,4 @@
-lockfileVersion: '6.1'
-
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
+lockfileVersion: '6.0'
 
 dependencies:
   jsonc-parse:
@@ -1560,7 +1556,6 @@ packages:
     resolution: {integrity: sha512-x/R72SmW3sSFRm5zrrIjAhCeQSAWoni3CmHEqfQrZIQTM3lVCdehdwuIqaOtfC2slvpdlLa62GYoN8SxT23m6Q==}
     engines: {node: '>=12'}
     hasBin: true
-    requiresBuild: true
     optionalDependencies:
       '@esbuild/android-arm': 0.15.18
       '@esbuild/linux-loong64': 0.15.18
@@ -1590,7 +1585,6 @@ packages:
     resolution: {integrity: sha512-XQ0jAPFkK/u3LcVRcvVHQcTIqD6E2H1fvZMA5dQPSOWb3suUbWbfbRf94pjc0bNzRYLfIrDRQXr7X+LHIm5oHw==}
     engines: {node: '>=12'}
     hasBin: true
-    requiresBuild: true
     optionalDependencies:
       '@esbuild/android-arm': 0.17.19
       '@esbuild/android-arm64': 0.17.19
