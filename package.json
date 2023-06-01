@@ -43,18 +43,18 @@
   "scripts": {
     "build": "tsup",
     "test": "vitest --run",
-    "lint": "eslint {src,tests}/**/*.ts"
+    "lint": "eslint ."
   },
   "dependencies": {
-    "jsonc-parse": "^1.0.2"
+    "jsonc-parse": "^1.0.3"
   },
   "devDependencies": {
     "@luxass/eslint-config": "^3.2.0",
-    "@luxass/prettier-config": "^1.1.3",
-    "@types/node": "^18.11.18",
-    "eslint": "^8.31.0",
-    "tsup": "^6.5.0",
-    "typescript": "^5.0.0",
-    "vitest": "^0.31.0"
+    "@luxass/prettier-config": "^1.2.0",
+    "@types/node": "^18.16.16",
+    "eslint": "^8.41.0",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4",
+    "vitest": "^0.31.3"
   }
 }
