@@ -1,7 +1,8 @@
 {
   "name": "tsconf-utils",
   "type": "module",
-  "version": "1.2.0",
+  "version": "1.2.1",
+  "packageManager": "pnpm@8.6.0",
   "description": "Utils for TSConfig files",
   "author": {
     "name": "Lucas Norgaard",
@@ -28,7 +29,8 @@
       "types": "./dist/index.d.ts",
       "require": "./dist/index.cjs",
       "import": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -39,18 +41,18 @@
   "engines": {
     "node": ">=16"
   },
-  "packageManager": "pnpm@8.6.0",
   "scripts": {
     "build": "tsup",
+    "dev": "vitest",
     "test": "vitest --run",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "jsonc-parse": "^1.0.3"
   },
   "devDependencies": {
     "@luxass/eslint-config": "^3.2.0",
-    "@luxass/prettier-config": "^1.2.0",
     "@types/node": "^18.16.16",
     "eslint": "^8.41.0",
     "tsup": "^6.7.0",
