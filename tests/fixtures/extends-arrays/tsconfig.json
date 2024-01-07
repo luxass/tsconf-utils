@@ -1,10 +1,10 @@
 {
   "extends": ["./tsconfig.base.json", "./astro/tsconfigs/strictest.json"],
   "compilerOptions": {
-    "strict": true,
     "baseUrl": ".",
     "paths": {
       "~/server/*": ["server/*"]
-    }
+    },
+    "strict": true
   }
 }

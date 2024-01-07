@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { describe, expect, test } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   findTSConfig,
@@ -8,19 +8,19 @@ import {
   parseTSConfig,
   parseTSConfigSync,
   resolveTSConfig,
-  resolveTSConfigSync
+  resolveTSConfigSync,
 } from "../src";
 
 describe("parse", async () => {
   const fwd = path.join(__dirname, "fixtures", "test-2");
   const configPath = await findTSConfig(fwd, "tsconfig.json");
 
-  test("parse - async", async () => {
+  it("parse - async", async () => {
     const config = await parseTSConfig(configPath!);
     expect(config).not.toBe(null);
   });
 
-  test("parse - sync", () => {
+  it("parse - sync", () => {
     const config = parseTSConfigSync(configPath!);
     expect(config).not.toBe(null);
   });
@@ -28,12 +28,12 @@ describe("parse", async () => {
 
 describe("resolve", () => {
   const fwd = path.join(__dirname, "fixtures", "test-2");
-  test("resolve - async", async () => {
+  it("resolve - async", async () => {
     const config = await resolveTSConfig(fwd, "tsconfig.json");
     expect(config).not.toBe(null);
   });
 
-  test("resolve - sync", () => {
+  it("resolve - sync", () => {
     const config = resolveTSConfigSync(fwd, "tsconfig.json");
     expect(config).not.toBe(null);
   });
@@ -41,12 +41,12 @@ describe("resolve", () => {
 
 describe("resolve `extends` array", () => {
   const fwd = path.join(__dirname, "fixtures", "extends-array");
-  test("resolve - async", async () => {
+  it("resolve - async", async () => {
     const config = await resolveTSConfig(fwd, "tsconfig.json");
     expect(config).not.toBe(null);
   });
 
-  test("resolve - sync", () => {
+  it("resolve - sync", () => {
     const config = resolveTSConfigSync(fwd, "tsconfig.json");
     expect(config).not.toBe(null);
   });
@@ -54,12 +54,12 @@ describe("resolve `extends` array", () => {
 
 describe("find", () => {
   const fwd = path.join(__dirname, "fixtures", "test-1");
-  test("find - async", async () => {
+  it("find - async", async () => {
     const config = await findTSConfig(fwd, "tsconfig.json");
     expect(config).not.toBe(null);
   });
 
-  test("find - sync", () => {
+  it("find - sync", () => {
     const config = findTSConfigSync(fwd, "tsconfig.json");
     expect(config).not.toBe(null);
   });

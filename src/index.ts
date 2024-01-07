@@ -5,16 +5,21 @@ import {
   dirname,
   join,
   parse as pathParse,
-  resolve as pathResolve
+  resolve as pathResolve,
 } from "node:path";
+import process from "node:process";
 
 import { parseFile, parseFileSync } from "jsonc-parse";
 
 const _require = createRequire(import.meta.url);
 
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error;
+};
+
 export async function findTSConfig(
   dir: string,
-  name: string
+  name: string,
 ): Promise<string | null> {
   const root = pathParse(dir).root;
   while (dir !== root) {
@@ -23,7 +28,7 @@ export async function findTSConfig(
       const stats = await stat(file);
       if (stats.isFile()) return file;
     } catch (e) {
-      if (e.code !== "ENOENT") {
+      if (isNodeError(e) && e.code !== "ENOENT") {
         throw e;
       }
     }
@@ -40,7 +45,7 @@ export function findTSConfigSync(dir: string, name: string): string | null {
       const stats = statSync(file);
       if (stats.isFile()) return file;
     } catch (e) {
-      if (e.code !== "ENOENT") {
+      if (isNodeError(e) && e.code !== "ENOENT") {
         throw e;
       }
     }
@@ -50,15 +55,15 @@ export function findTSConfigSync(dir: string, name: string): string | null {
   return null;
 }
 
-export type ResolveResult = {
+export interface ResolveResult {
   path: string
   tsconfig: Record<string, any>
   files: string[]
-};
+}
 
 export async function resolveTSConfig(
   cwd: string = process.cwd(),
-  name = "tsconfig.json"
+  name = "tsconfig.json",
 ): Promise<ResolveResult | null> {
   let path;
   try {
@@ -74,10 +79,10 @@ export async function resolveTSConfig(
     return {
       path,
       tsconfig: config,
-      files
+      files,
     };
   } catch (e) {
-    if (e.code === "EISDIR") {
+    if (isNodeError(e) && e.code === "EISDIR") {
       console.error(`${path} is a directory.`);
     }
 
@@ -87,7 +92,7 @@ export async function resolveTSConfig(
 
 export function resolveTSConfigSync(
   cwd: string = process.cwd(),
-  name = "tsconfig.json"
+  name = "tsconfig.json",
 ): ResolveResult | null {
   let path;
   try {
@@ -103,10 +108,10 @@ export function resolveTSConfigSync(
     return {
       path,
       tsconfig: config,
-      files
+      files,
     };
   } catch (e) {
-    if (e.code === "EISDIR") {
+    if (isNodeError(e) && e.code === "EISDIR") {
       console.error(`${path} is a directory.`);
     }
 
@@ -114,17 +119,17 @@ export function resolveTSConfigSync(
   }
 }
 
-export type ParseResult = {
+export interface ParseResult {
   config: Record<string, any>
   files: string[]
-};
+}
 
 export async function parseTSConfig(path: string): Promise<ParseResult> {
   const config = await parseFile(path);
   if (!config) {
     return {
       config: {},
-      files: []
+      files: [],
     };
   }
 
@@ -132,15 +137,15 @@ export async function parseTSConfig(path: string): Promise<ParseResult> {
   let files: string[] = [];
 
   if (config.extends) {
-    const _extends = Array.isArray(config.extends) ?
-      config.extends :
-        [config.extends];
+    const _extends = Array.isArray(config.extends)
+      ? config.extends
+      : [config.extends];
     for (let extendsPath of _extends) {
       if (extendsPath.startsWith(".")) {
         extendsPath = await findTSConfig(configDir, extendsPath);
       } else {
         extendsPath = _require.resolve(extendsPath, {
-          paths: [configDir]
+          paths: [configDir],
         });
       }
 
@@ -153,8 +158,8 @@ export async function parseTSConfig(path: string): Promise<ParseResult> {
           ...config,
           compilerOptions: {
             ...extendsConfig.config.compilerOptions,
-            ...config.compilerOptions
-          }
+            ...config.compilerOptions,
+          },
         });
       }
     }
@@ -163,7 +168,7 @@ export async function parseTSConfig(path: string): Promise<ParseResult> {
   if (config.compilerOptions?.baseUrl) {
     config.compilerOptions.baseUrl = join(
       configDir,
-      config.compilerOptions.baseUrl
+      config.compilerOptions.baseUrl,
     );
   }
 
@@ -172,7 +177,7 @@ export async function parseTSConfig(path: string): Promise<ParseResult> {
 
   return {
     config,
-    files
+    files,
   };
 }
 
@@ -181,7 +186,7 @@ export function parseTSConfigSync(path: string): ParseResult {
   if (!config) {
     return {
       config: {},
-      files: []
+      files: [],
     };
   }
 
@@ -189,15 +194,15 @@ export function parseTSConfigSync(path: string): ParseResult {
   let files: string[] = [];
 
   if (config.extends) {
-    const _extends = Array.isArray(config.extends) ?
-      config.extends :
-        [config.extends];
+    const _extends = Array.isArray(config.extends)
+      ? config.extends
+      : [config.extends];
     for (let extendsPath of _extends) {
       if (extendsPath.startsWith(".")) {
         extendsPath = findTSConfigSync(configDir, extendsPath);
       } else {
         extendsPath = _require.resolve(extendsPath, {
-          paths: [configDir]
+          paths: [configDir],
         });
       }
 
@@ -210,8 +215,8 @@ export function parseTSConfigSync(path: string): ParseResult {
           ...config,
           compilerOptions: {
             ...extendsConfig.config.compilerOptions,
-            ...config.compilerOptions
-          }
+            ...config.compilerOptions,
+          },
         });
       }
     }
@@ -220,7 +225,7 @@ export function parseTSConfigSync(path: string): ParseResult {
   if (config.compilerOptions?.baseUrl) {
     config.compilerOptions.baseUrl = join(
       configDir,
-      config.compilerOptions.baseUrl
+      config.compilerOptions.baseUrl,
     );
   }
 
@@ -229,6 +234,6 @@ export function parseTSConfigSync(path: string): ParseResult {
 
   return {
     config,
-    files
+    files,
   };
 }

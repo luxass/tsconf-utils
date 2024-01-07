@@ -1,15 +1,12 @@
 # tsconf-utils
 
-> Utilities for working with tsconfig.json files
-
-<p align="center">
-  <a href="https://www.npmjs.com/package/tsconf-utils"><img src="https://img.shields.io/npm/v/tsconf-utils?style=for-the-badge&color=3FA7D6&label="></a>
-<p>
-
+[![npm version][npm-version-src]][npm-version-href]
+[![npm downloads][npm-downloads-src]][npm-downloads-href]
 
 ## Install
+
 ```bash
-pnpm install tsconf-utils
+npm install tsconf-utils
 ```
 
 ## Usage
@@ -41,5 +38,15 @@ const config = await resolveTSConfig(path);
 
 // Resolve tsconfig.json files synchronously (find and parse)
 const config = resolveTSConfigSync(path);
-
 ```
+
+## 📄 License
+
+Published under [MIT License](./LICENSE).
+
+<!-- Badges -->
+
+[npm-version-src]: https://img.shields.io/npm/v/tsconf-utils?style=flat&colorA=18181B&colorB=4169E1
+[npm-version-href]: https://npmjs.com/package/tsconf-utils
+[npm-downloads-src]: https://img.shields.io/npm/dm/tsconf-utils?style=flat&colorA=18181B&colorB=4169E1
+[npm-downloads-href]: https://npmjs.com/package/tsconf-utils
