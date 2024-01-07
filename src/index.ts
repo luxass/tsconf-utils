@@ -13,6 +13,10 @@ import { parseFile, parseFileSync } from "jsonc-parse";
 
 const _require = createRequire(import.meta.url);
 
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error;
+};
+
 export async function findTSConfig(
   dir: string,
   name: string,
@@ -24,7 +28,7 @@ export async function findTSConfig(
       const stats = await stat(file);
       if (stats.isFile()) return file;
     } catch (e) {
-      if (e.code !== "ENOENT") {
+      if (isNodeError(e) && e.code !== "ENOENT") {
         throw e;
       }
     }
@@ -41,7 +45,7 @@ export function findTSConfigSync(dir: string, name: string): string | null {
       const stats = statSync(file);
       if (stats.isFile()) return file;
     } catch (e) {
-      if (e.code !== "ENOENT") {
+      if (isNodeError(e) && e.code !== "ENOENT") {
         throw e;
       }
     }
@@ -78,7 +82,7 @@ export async function resolveTSConfig(
       files,
     };
   } catch (e) {
-    if (e.code === "EISDIR") {
+    if (isNodeError(e) && e.code === "EISDIR") {
       console.error(`${path} is a directory.`);
     }
 
@@ -107,7 +111,7 @@ export function resolveTSConfigSync(
       files,
     };
   } catch (e) {
-    if (e.code === "EISDIR") {
+    if (isNodeError(e) && e.code === "EISDIR") {
       console.error(`${path} is a directory.`);
     }
 
