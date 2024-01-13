@@ -19,11 +19,11 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
 
-      - name: Setup node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
+          node-version: 18
+          cache: pnpm
           registry-url: "https://registry.npmjs.org"
-          node-version: 20
 
       - run: pnpx changelogithub
         env:
@@ -31,6 +31,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Build
+        run: pnpm build
 
       - name: Publish to NPM
         run: npm publish --access public --no-git-checks
