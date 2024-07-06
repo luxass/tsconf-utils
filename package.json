@@ -57,10 +57,10 @@
     "jsonc-parse": "^1.2.0"
   },
   "devDependencies": {
-    "@luxass/eslint-config": "^4.0.1",
+    "@luxass/eslint-config": "^4.7.0",
     "@types/node": "^18.19.4",
-    "eslint": "^8.56.0",
-    "eslint-plugin-format": "^0.1.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-format": "^0.1.2",
     "tsup": "^8.1.0",
     "typescript": "^5.3.3",
     "vitest": "^1.6.0"
