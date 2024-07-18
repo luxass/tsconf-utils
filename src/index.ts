@@ -56,9 +56,9 @@ export function findTSConfigSync(dir: string, name: string): string | null {
 }
 
 export interface ResolveResult {
-  path: string
-  tsconfig: Record<string, any>
-  files: string[]
+  path: string;
+  tsconfig: Record<string, any>;
+  files: string[];
 }
 
 export async function resolveTSConfig(
@@ -120,8 +120,8 @@ export function resolveTSConfigSync(
 }
 
 export interface ParseResult {
-  config: Record<string, any>
-  files: string[]
+  config: Record<string, any>;
+  files: string[];
 }
 
 export async function parseTSConfig(path: string): Promise<ParseResult> {
