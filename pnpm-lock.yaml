@@ -9,14 +9,14 @@ importers:
   .:
     dependencies:
       jsonc-parse:
-        specifier: ^1.5.5
+        specifier: 1.5.5
         version: 1.5.5
     devDependencies:
       '@luxass/eslint-config':
-        specifier: ^4.15.0
+        specifier: 4.19.0
         version: 4.19.0(@vue/compiler-sfc@3.4.31)(eslint-plugin-format@1.0.1(eslint@9.27.0))(eslint@9.27.0)(typescript@5.9.2)(vitest@3.1.4(@types/debug@4.1.12)(@types/node@22.17.1)(yaml@2.8.0))
       '@types/node':
-        specifier: ^22.0.0
+        specifier: 22.17.1
         version: 22.17.1
       eslint:
         specifier: ^9.20.0
@@ -25,10 +25,10 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1(eslint@9.27.0)
       tsup:
-        specifier: ^8.3.6
+        specifier: 8.5.0
         version: 8.5.0(postcss@8.5.6)(typescript@5.9.2)(yaml@2.8.0)
       typescript:
-        specifier: ^5.7.3
+        specifier: 5.9.2
         version: 5.9.2
       vitest:
         specifier: ^3.0.5
