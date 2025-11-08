@@ -1,6 +1,6 @@
 {
   "name": "tsconf-utils",
-  "version": "1.4.1",
+  "version": "2.0.0",
   "description": "Utils for TSConfig files",
   "type": "module",
   "author": {
