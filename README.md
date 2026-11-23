@@ -5,6 +5,8 @@
 
 ## Install
 
+Requires Node.js 22 or later.
+
 ```bash
 npm install tsconf-utils
 ```
@@ -18,7 +20,7 @@ import {
   parseTSConfig,
   parseTSConfigSync,
   resolveTSConfig,
-  resolveTSConfigSync
+  resolveTSConfigSync,
 } from "tsconf-utils";
 
 // Find tsconfig.json files
