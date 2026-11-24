@@ -1,223 +1,70 @@
-import { statSync } from "node:fs";
-import { stat } from "node:fs/promises";
-import { createRequire } from "node:module";
-import { dirname, join, parse as pathParse, resolve as pathResolve } from "node:path";
-import process from "node:process";
+import { Effect } from "effect";
 
-import { parseFile, parseFileSync } from "jsonc-parse";
+import { findTSConfigEffect } from "./find";
+import { loadTSConfigEffect, parseTSConfigEffect } from "./parse";
+import type { FindTSConfigOptions, TSConfigResult } from "./types";
 
-const requireFromHere = createRequire(import.meta.url);
+export {
+  TSConfigExtendsCycleError,
+  TSConfigExtendsNotFoundError,
+  TSConfigParseError,
+  TSConfigReadError,
+  type TSConfigError,
+} from "./errors";
+export { findTSConfigEffect } from "./find";
+export { loadTSConfigEffect, parseTSConfigEffect } from "./parse";
+export type {
+  FindTSConfigOptions,
+  ResolvedTSConfig,
+  TSConfigCompilerOptions,
+  TSConfigJSON,
+  TSConfigResult,
+} from "./types";
 
-function isNodeError(error: unknown): error is NodeJS.ErrnoException {
-  return error instanceof Error;
+// Each function exists in three forms. They all run the same Effect.
+// `Effect.runSync` and `Effect.runPromise` throw the original tagged error, so callers can use `instanceof`.
+
+/**
+ * Finds the closest tsconfig file, starting in `cwd` and going up to the file system root.
+ * Returns `undefined` if no file is found.
+ *
+ * @throws {TSConfigReadError} if a file exists but cannot be checked.
+ */
+export function findTSConfigSync(options?: FindTSConfigOptions): string | undefined {
+  return Effect.runSync(findTSConfigEffect(options));
 }
 
-export async function findTSConfig(dir: string, name: string): Promise<string | null> {
-  const root = pathParse(dir).root;
-  while (dir !== root) {
-    const file = pathResolve(dir, name);
-    try {
-      const stats = await stat(file);
-      if (stats.isFile()) return file;
-    } catch (e) {
-      if (isNodeError(e) && e.code !== "ENOENT") {
-        throw e;
-      }
-    }
-    dir = pathParse(dir).dir;
-  }
-  return null;
+/** Promise version of {@link findTSConfigSync}. */
+export function findTSConfig(options?: FindTSConfigOptions): Promise<string | undefined> {
+  return Effect.runPromise(findTSConfigEffect(options));
 }
 
-export function findTSConfigSync(dir: string, name: string): string | null {
-  const root = pathParse(dir).root;
-  while (dir !== root) {
-    const file = pathResolve(dir, name);
-    try {
-      const stats = statSync(file);
-      if (stats.isFile()) return file;
-    } catch (e) {
-      if (isNodeError(e) && e.code !== "ENOENT") {
-        throw e;
-      }
-    }
-    dir = pathParse(dir).dir;
-  }
-
-  return null;
+/**
+ * Reads a tsconfig file, merges every `extends` entry into it, and makes all paths absolute.
+ *
+ * @throws {TSConfigError} if a file cannot be read or parsed,
+ *   an `extends` entry cannot be resolved, or `extends` entries form a loop.
+ */
+export function parseTSConfigSync(path: string): TSConfigResult {
+  return Effect.runSync(parseTSConfigEffect(path));
 }
 
-export interface ResolveResult {
-  path: string;
-  // oxlint-disable-next-line typescript/no-explicit-any -- Preserve the public result type.
-  tsconfig: Record<string, any>;
-  files: string[];
+/** Promise version of {@link parseTSConfigSync}. */
+export function parseTSConfig(path: string): Promise<TSConfigResult> {
+  return Effect.runPromise(parseTSConfigEffect(path));
 }
 
-export async function resolveTSConfig(
-  cwd: string = process.cwd(),
-  name = "tsconfig.json",
-): Promise<ResolveResult | null> {
-  let path;
-  try {
-    path = await findTSConfig(cwd, name);
-
-    if (!path) return null;
-    const { config, files } = await parseTSConfig(path);
-
-    if (typeof config !== "object") {
-      throw new SyntaxError(`Invalid JSON in ${path}`);
-    }
-
-    return {
-      path,
-      tsconfig: config,
-      files,
-    };
-  } catch (e) {
-    if (isNodeError(e) && e.code === "EISDIR") {
-      console.error(`${path} is a directory.`);
-    }
-
-    return null;
-  }
+/**
+ * Finds the closest tsconfig file and parses it.
+ * Returns `undefined` if no tsconfig file is found.
+ *
+ * @throws {TSConfigError} if the tsconfig file that was found is broken.
+ */
+export function loadTSConfigSync(options?: FindTSConfigOptions): TSConfigResult | undefined {
+  return Effect.runSync(loadTSConfigEffect(options));
 }
 
-export function resolveTSConfigSync(
-  cwd: string = process.cwd(),
-  name = "tsconfig.json",
-): ResolveResult | null {
-  let path;
-  try {
-    path = findTSConfigSync(cwd, name);
-
-    if (!path) return null;
-    const { config, files } = parseTSConfigSync(path);
-
-    if (typeof config !== "object") {
-      throw new SyntaxError(`Invalid JSON in ${path}`);
-    }
-
-    return {
-      path,
-      tsconfig: config,
-      files,
-    };
-  } catch (e) {
-    if (isNodeError(e) && e.code === "EISDIR") {
-      console.error(`${path} is a directory.`);
-    }
-
-    return null;
-  }
-}
-
-export interface ParseResult {
-  // oxlint-disable-next-line typescript/no-explicit-any -- Preserve the public result type.
-  config: Record<string, any>;
-  files: string[];
-}
-
-export async function parseTSConfig(path: string): Promise<ParseResult> {
-  const config = await parseFile(path);
-  if (!config) {
-    return {
-      config: {},
-      files: [],
-    };
-  }
-
-  const configDir = dirname(path);
-  let files: string[] = [];
-
-  if (config.extends) {
-    const extendsPaths = Array.isArray(config.extends) ? config.extends : [config.extends];
-    for (let extendsPath of extendsPaths) {
-      if (extendsPath.startsWith(".")) {
-        extendsPath = await findTSConfig(configDir, extendsPath);
-      } else {
-        extendsPath = requireFromHere.resolve(extendsPath, {
-          paths: [configDir],
-        });
-      }
-
-      const extendsConfig = await parseTSConfig(extendsPath);
-      files = files.concat(extendsConfig.files);
-
-      if (extendsConfig) {
-        Object.assign(config, {
-          ...extendsConfig.config,
-          ...config,
-          compilerOptions: {
-            ...extendsConfig.config.compilerOptions,
-            ...config.compilerOptions,
-          },
-        });
-      }
-    }
-  }
-
-  if (config.compilerOptions?.baseUrl) {
-    config.compilerOptions.baseUrl = join(configDir, config.compilerOptions.baseUrl);
-  }
-
-  delete config.extends;
-  files.unshift(path);
-
-  return {
-    config,
-    files,
-  };
-}
-
-export function parseTSConfigSync(path: string): ParseResult {
-  const config = parseFileSync(path);
-  if (!config) {
-    return {
-      config: {},
-      files: [],
-    };
-  }
-
-  const configDir = dirname(path);
-  let files: string[] = [];
-
-  if (config.extends) {
-    const extendsPaths = Array.isArray(config.extends) ? config.extends : [config.extends];
-    for (let extendsPath of extendsPaths) {
-      if (extendsPath.startsWith(".")) {
-        extendsPath = findTSConfigSync(configDir, extendsPath);
-      } else {
-        extendsPath = requireFromHere.resolve(extendsPath, {
-          paths: [configDir],
-        });
-      }
-
-      const extendsConfig = parseTSConfigSync(extendsPath);
-      files = files.concat(extendsConfig.files);
-
-      if (extendsConfig) {
-        Object.assign(config, {
-          ...extendsConfig.config,
-          ...config,
-          compilerOptions: {
-            ...extendsConfig.config.compilerOptions,
-            ...config.compilerOptions,
-          },
-        });
-      }
-    }
-  }
-
-  if (config.compilerOptions?.baseUrl) {
-    config.compilerOptions.baseUrl = join(configDir, config.compilerOptions.baseUrl);
-  }
-
-  delete config.extends;
-  files.unshift(path);
-
-  return {
-    config,
-    files,
-  };
+/** Promise version of {@link loadTSConfigSync}. */
+export function loadTSConfig(options?: FindTSConfigOptions): Promise<TSConfigResult | undefined> {
+  return Effect.runPromise(loadTSConfigEffect(options));
 }
