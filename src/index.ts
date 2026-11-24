@@ -1,26 +1,18 @@
 import { statSync } from "node:fs";
 import { stat } from "node:fs/promises";
 import { createRequire } from "node:module";
-import {
-  dirname,
-  join,
-  parse as pathParse,
-  resolve as pathResolve,
-} from "node:path";
+import { dirname, join, parse as pathParse, resolve as pathResolve } from "node:path";
 import process from "node:process";
 
 import { parseFile, parseFileSync } from "jsonc-parse";
 
-const _require = createRequire(import.meta.url);
+const requireFromHere = createRequire(import.meta.url);
 
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error;
-};
+}
 
-export async function findTSConfig(
-  dir: string,
-  name: string,
-): Promise<string | null> {
+export async function findTSConfig(dir: string, name: string): Promise<string | null> {
   const root = pathParse(dir).root;
   while (dir !== root) {
     const file = pathResolve(dir, name);
@@ -57,6 +49,7 @@ export function findTSConfigSync(dir: string, name: string): string | null {
 
 export interface ResolveResult {
   path: string;
+  // oxlint-disable-next-line typescript/no-explicit-any -- Preserve the public result type.
   tsconfig: Record<string, any>;
   files: string[];
 }
@@ -120,6 +113,7 @@ export function resolveTSConfigSync(
 }
 
 export interface ParseResult {
+  // oxlint-disable-next-line typescript/no-explicit-any -- Preserve the public result type.
   config: Record<string, any>;
   files: string[];
 }
@@ -137,14 +131,12 @@ export async function parseTSConfig(path: string): Promise<ParseResult> {
   let files: string[] = [];
 
   if (config.extends) {
-    const _extends = Array.isArray(config.extends)
-      ? config.extends
-      : [config.extends];
-    for (let extendsPath of _extends) {
+    const extendsPaths = Array.isArray(config.extends) ? config.extends : [config.extends];
+    for (let extendsPath of extendsPaths) {
       if (extendsPath.startsWith(".")) {
         extendsPath = await findTSConfig(configDir, extendsPath);
       } else {
-        extendsPath = _require.resolve(extendsPath, {
+        extendsPath = requireFromHere.resolve(extendsPath, {
           paths: [configDir],
         });
       }
@@ -166,10 +158,7 @@ export async function parseTSConfig(path: string): Promise<ParseResult> {
   }
 
   if (config.compilerOptions?.baseUrl) {
-    config.compilerOptions.baseUrl = join(
-      configDir,
-      config.compilerOptions.baseUrl,
-    );
+    config.compilerOptions.baseUrl = join(configDir, config.compilerOptions.baseUrl);
   }
 
   delete config.extends;
@@ -194,14 +183,12 @@ export function parseTSConfigSync(path: string): ParseResult {
   let files: string[] = [];
 
   if (config.extends) {
-    const _extends = Array.isArray(config.extends)
-      ? config.extends
-      : [config.extends];
-    for (let extendsPath of _extends) {
+    const extendsPaths = Array.isArray(config.extends) ? config.extends : [config.extends];
+    for (let extendsPath of extendsPaths) {
       if (extendsPath.startsWith(".")) {
         extendsPath = findTSConfigSync(configDir, extendsPath);
       } else {
-        extendsPath = _require.resolve(extendsPath, {
+        extendsPath = requireFromHere.resolve(extendsPath, {
           paths: [configDir],
         });
       }
@@ -223,10 +210,7 @@ export function parseTSConfigSync(path: string): ParseResult {
   }
 
   if (config.compilerOptions?.baseUrl) {
-    config.compilerOptions.baseUrl = join(
-      configDir,
-      config.compilerOptions.baseUrl,
-    );
+    config.compilerOptions.baseUrl = join(configDir, config.compilerOptions.baseUrl);
   }
 
   delete config.extends;
