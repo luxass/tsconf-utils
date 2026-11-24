@@ -31,3 +31,22 @@ jobs:
     with:
       runs-on: ${{ matrix.os }}
       node-version: "24"
+
+  # Compares our output with `tsc --showConfig` from TypeScript 5.9, 6.0, and 7.0.
+  conformance:
+    uses: luxass/shared-workflows/.github/workflows/reusable-test.yaml@10298e06aecc428b39ef4121636400396b53a1fa # v0.16.0
+    permissions:
+      contents: read
+    with:
+      node-version: "24"
+      test-script: "test:conformance"
+
+  # Same check against TypeScript pre-releases. An early warning only:
+  # do not mark this job as a required status check.
+  conformance-next:
+    uses: luxass/shared-workflows/.github/workflows/reusable-test.yaml@10298e06aecc428b39ef4121636400396b53a1fa # v0.16.0
+    permissions:
+      contents: read
+    with:
+      node-version: "24"
+      test-script: "test:conformance:next"
