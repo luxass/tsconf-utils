@@ -44,47 +44,48 @@ function readExtends(raw: Record<string, unknown>, path: string) {
   );
 }
 
-function parseFile(
+// Calls itself once per `extends` entry, so the trace shows the whole extends tree.
+const parseFile = Effect.fn("tsconf-utils/parseFile")(function* (
   path: string,
   rootConfigDir: string,
   chain: readonly string[],
-): Effect.Effect<ParsedFile, TSConfigError> {
-  return Effect.gen(function* () {
-    if (chain.includes(path)) {
-      return yield* new TSConfigExtendsCycleError({ chain: [...chain, path] });
-    }
+): Effect.fn.Return<ParsedFile, TSConfigError> {
+  yield* Effect.annotateCurrentSpan({ path, depth: chain.length });
 
-    const raw = yield* readJsonObject(path);
-    const extendsSpecifiers = yield* readExtends(raw, path);
-    if (raw.compilerOptions !== undefined && !isRecord(raw.compilerOptions)) {
-      return yield* new TSConfigParseError({ path, reason: '"compilerOptions" must be an object' });
-    }
+  if (chain.includes(path)) {
+    return yield* new TSConfigExtendsCycleError({ chain: [...chain, path] });
+  }
 
-    const ownDir = dirname(path);
-    const nextChain = [...chain, path];
-    const configFiles = [path];
-    let inherited: TSConfigJSON = {};
-    let pathsBaseDir: string | undefined;
+  const raw = yield* readJsonObject(path);
+  const extendsSpecifiers = yield* readExtends(raw, path);
+  if (raw.compilerOptions !== undefined && !isRecord(raw.compilerOptions)) {
+    return yield* new TSConfigParseError({ path, reason: '"compilerOptions" must be an object' });
+  }
 
-    // Later `extends` entries win over earlier ones.
-    for (const specifier of extendsSpecifiers) {
-      const parentPath = yield* resolveExtends(specifier, path, nextChain);
-      const parent = yield* parseFile(parentPath, rootConfigDir, nextChain);
+  const ownDir = dirname(path);
+  const nextChain = [...chain, path];
+  const configFiles = [path];
+  let inherited: TSConfigJSON = {};
+  let pathsBaseDir: string | undefined;
 
-      // TypeScript never inherits `references`.
-      const { references: _references, ...parentConfig } = parent.config;
-      inherited = mergeConfigs(inherited, parentConfig);
-      if (parentConfig.compilerOptions?.paths !== undefined) pathsBaseDir = parent.pathsBaseDir;
-      configFiles.push(...parent.configFiles);
-    }
+  // Later `extends` entries win over earlier ones.
+  for (const specifier of extendsSpecifiers) {
+    const parentPath = yield* resolveExtends(specifier, path, nextChain);
+    const parent = yield* parseFile(parentPath, rootConfigDir, nextChain);
 
-    const own = normalizeOwnPaths(raw as TSConfigJSON, ownDir, rootConfigDir);
-    if (own.compilerOptions?.paths !== undefined) pathsBaseDir = ownDir;
+    // TypeScript never inherits `references`.
+    const { references: _references, ...parentConfig } = parent.config;
+    inherited = mergeConfigs(inherited, parentConfig);
+    if (parentConfig.compilerOptions?.paths !== undefined) pathsBaseDir = parent.pathsBaseDir;
+    configFiles.push(...parent.configFiles);
+  }
 
-    const { extends: _extends, ...config } = mergeConfigs(inherited, own);
-    return { config, configFiles, pathsBaseDir };
-  });
-}
+  const own = normalizeOwnPaths(raw as TSConfigJSON, ownDir, rootConfigDir);
+  if (own.compilerOptions?.paths !== undefined) pathsBaseDir = ownDir;
+
+  const { extends: _extends, ...config } = mergeConfigs(inherited, own);
+  return { config, configFiles, pathsBaseDir };
+});
 
 /**
  * Reads a tsconfig file, merges every `extends` entry into it, and makes all paths absolute.
@@ -92,10 +93,11 @@ function parseFile(
  * Fails with a `TSConfigError` if a file cannot be read or parsed,
  * an `extends` entry cannot be resolved, or `extends` entries form a loop.
  */
-export const parseTSConfigEffect = Effect.fn("parseTSConfig")(function* (
+export const parseTSConfigEffect = Effect.fn("tsconf-utils/parseTSConfig")(function* (
   path: string,
 ): Effect.fn.Return<TSConfigResult, TSConfigError> {
   const absolutePath = resolve(path);
+  yield* Effect.annotateCurrentSpan("path", absolutePath);
   const rootConfigDir = dirname(absolutePath);
   const parsed = yield* parseFile(absolutePath, rootConfigDir, []);
 
@@ -116,7 +118,7 @@ export const parseTSConfigEffect = Effect.fn("parseTSConfig")(function* (
  *
  * Succeeds with `undefined` if no tsconfig file is found.
  */
-export const loadTSConfigEffect = Effect.fn("loadTSConfig")(function* (
+export const loadTSConfigEffect = Effect.fn("tsconf-utils/loadTSConfig")(function* (
   options: FindTSConfigOptions = {},
 ): Effect.fn.Return<TSConfigResult | undefined, TSConfigError> {
   const path = yield* findTSConfigEffect(options);

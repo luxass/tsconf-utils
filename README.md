@@ -85,6 +85,22 @@ const program = loadTSConfigEffect({ cwd: "./packages/app" }).pipe(
 );
 ```
 
+### Tracing
+
+Every step is an `Effect.fn` span, so a trace follows the `extends` tree.
+Install a tracer (for example with `@effect/opentelemetry`) to see them. Without a tracer, the spans cost almost nothing.
+
+| Span                             | Attributes                       |
+| -------------------------------- | -------------------------------- |
+| `tsconf-utils/findTSConfig`      | `cwd`, `name`                    |
+| `tsconf-utils/loadTSConfig`      |                                  |
+| `tsconf-utils/parseTSConfig`     | `path`                           |
+| `tsconf-utils/parseFile`         | `path`, `depth` (one per config) |
+| `tsconf-utils/readJsonObject`    | `path`                           |
+| `tsconf-utils/resolveExtends`    | `specifier`, `from`, `resolved`  |
+| `tsconf-utils/packageCandidates` | `packageDir`                     |
+| `tsconf-utils/findPackageDir`    | `name`, `fromDir`                |
+
 ## Migrating from v2
 
 - `resolveTSConfig(cwd, name)` is now `loadTSConfig({ cwd, name })`. The same change applies to the sync version.

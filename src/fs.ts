@@ -18,9 +18,13 @@ function errorCode(error: unknown): string | undefined {
 /**
  * Returns `true` if `path` is a file.
  * A missing path, or a path that goes through a file (ENOTDIR), returns `false`.
+ *
+ * Untraced: it runs once per folder while searching, and a span for each call would flood traces.
  */
-export function isFile(path: string): Effect.Effect<boolean, TSConfigReadError> {
-  return Effect.try({
+export const isFile = Effect.fnUntraced(function* (
+  path: string,
+): Effect.fn.Return<boolean, TSConfigReadError> {
+  return yield* Effect.try({
     try: () => {
       try {
         return statSync(path).isFile();
@@ -32,35 +36,35 @@ export function isFile(path: string): Effect.Effect<boolean, TSConfigReadError> 
     },
     catch: (cause) => new TSConfigReadError({ path, cause }),
   });
-}
+});
 
 /**
  * Reads a JSONC file and returns its content as a plain object.
  */
-export function readJsonObject(
+export const readJsonObject = Effect.fn("tsconf-utils/readJsonObject")(function* (
   path: string,
-): Effect.Effect<Record<string, unknown>, TSConfigReadError | TSConfigParseError> {
-  return Effect.gen(function* () {
-    const text = yield* Effect.try({
-      try: () => readFileSync(path, "utf8"),
-      catch: (cause) => new TSConfigReadError({ path, cause }),
-    });
+): Effect.fn.Return<Record<string, unknown>, TSConfigReadError | TSConfigParseError> {
+  yield* Effect.annotateCurrentSpan("path", path);
 
-    // Strip a UTF-8 byte order mark. Some Windows editors add one, and JSON.parse rejects it.
-    const content = text.startsWith("\uFEFF") ? text.slice(1) : text;
-
-    // TypeScript treats an empty tsconfig file as `{}`.
-    if (content.trim() === "") return {};
-
-    const value: unknown = yield* Effect.try({
-      try: () => parse(content),
-      catch: (cause) => new TSConfigParseError({ path, reason: "invalid JSON", cause }),
-    });
-
-    if (typeof value !== "object" || value === null || Array.isArray(value)) {
-      return yield* new TSConfigParseError({ path, reason: "the file must contain a JSON object" });
-    }
-
-    return value as Record<string, unknown>;
+  const text = yield* Effect.try({
+    try: () => readFileSync(path, "utf8"),
+    catch: (cause) => new TSConfigReadError({ path, cause }),
   });
-}
+
+  // Strip a UTF-8 byte order mark. Some Windows editors add one, and JSON.parse rejects it.
+  const content = text.startsWith("\uFEFF") ? text.slice(1) : text;
+
+  // TypeScript treats an empty tsconfig file as `{}`.
+  if (content.trim() === "") return {};
+
+  const value: unknown = yield* Effect.try({
+    try: () => parse(content),
+    catch: (cause) => new TSConfigParseError({ path, reason: "invalid JSON", cause }),
+  });
+
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return yield* new TSConfigParseError({ path, reason: "the file must contain a JSON object" });
+  }
+
+  return value as Record<string, unknown>;
+});

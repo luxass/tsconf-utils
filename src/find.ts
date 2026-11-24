@@ -13,11 +13,12 @@ import type { FindTSConfigOptions } from "./types";
  *
  * Succeeds with the absolute path of the first match, or `undefined` if there is no match.
  */
-export const findTSConfigEffect = Effect.fn("findTSConfig")(function* (
+export const findTSConfigEffect = Effect.fn("tsconf-utils/findTSConfig")(function* (
   options: FindTSConfigOptions = {},
 ): Effect.fn.Return<string | undefined, TSConfigReadError> {
   const name = options.name ?? "tsconfig.json";
   let dir = resolve(options.cwd ?? process.cwd());
+  yield* Effect.annotateCurrentSpan({ cwd: dir, name });
 
   while (true) {
     const candidate = join(dir, name);

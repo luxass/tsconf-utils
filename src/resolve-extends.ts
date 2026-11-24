@@ -21,24 +21,27 @@ type ResolveError = TSConfigExtendsNotFoundError | TSConfigReadError | TSConfigP
  *   If the file does not exist and the path does not end in `.json`, `.json` is added.
  * - Anything else is a package, found in `node_modules` folders.
  */
-export function resolveExtends(
+export const resolveExtends = Effect.fn("tsconf-utils/resolveExtends")(function* (
   specifier: string,
   fromConfig: string,
   chain: readonly string[],
-): Effect.Effect<string, ResolveError> {
-  return Effect.gen(function* () {
-    const fromDir = dirname(fromConfig);
-    const candidates = isPathSpecifier(specifier)
-      ? withJsonExtension(resolve(fromDir, specifier))
-      : yield* packageCandidates(specifier, fromDir);
+): Effect.fn.Return<string, ResolveError> {
+  yield* Effect.annotateCurrentSpan({ specifier, from: fromConfig });
 
-    for (const candidate of candidates) {
-      if (yield* isFile(candidate)) return candidate;
+  const fromDir = dirname(fromConfig);
+  const candidates = isPathSpecifier(specifier)
+    ? withJsonExtension(resolve(fromDir, specifier))
+    : yield* packageCandidates(specifier, fromDir);
+
+  for (const candidate of candidates) {
+    if (yield* isFile(candidate)) {
+      yield* Effect.annotateCurrentSpan("resolved", candidate);
+      return candidate;
     }
+  }
 
-    return yield* new TSConfigExtendsNotFoundError({ specifier, from: fromConfig, chain });
-  });
-}
+  return yield* new TSConfigExtendsNotFoundError({ specifier, from: fromConfig, chain });
+});
 
 function isPathSpecifier(specifier: string): boolean {
   return (
@@ -65,54 +68,53 @@ function splitPackageSpecifier(specifier: string): { name: string; subpath: stri
   return { name, subpath: rest === "" ? "." : `./${rest}` };
 }
 
-function packageCandidates(
+const packageCandidates = Effect.fn("tsconf-utils/packageCandidates")(function* (
   specifier: string,
   fromDir: string,
-): Effect.Effect<string[], TSConfigReadError | TSConfigParseError> {
-  return Effect.gen(function* () {
-    const { name, subpath } = splitPackageSpecifier(specifier);
-    const packageDir = yield* findPackageDir(name, fromDir);
-    if (packageDir === undefined) return [];
+): Effect.fn.Return<string[], TSConfigReadError | TSConfigParseError> {
+  const { name, subpath } = splitPackageSpecifier(specifier);
+  const packageDir = yield* findPackageDir(name, fromDir);
+  if (packageDir === undefined) return [];
+  yield* Effect.annotateCurrentSpan("packageDir", packageDir);
 
-    const packageJson = yield* readJsonObject(join(packageDir, "package.json"));
+  const packageJson = yield* readJsonObject(join(packageDir, "package.json"));
 
-    // When a package has `exports`, TypeScript only uses `exports`.
-    if (packageJson.exports !== undefined) {
-      const target = resolveExports(packageJson.exports, subpath);
-      return target === undefined ? [] : [join(packageDir, target)];
-    }
+  // When a package has `exports`, TypeScript only uses `exports`.
+  if (packageJson.exports !== undefined) {
+    const target = resolveExports(packageJson.exports, subpath);
+    return target === undefined ? [] : [join(packageDir, target)];
+  }
 
-    if (subpath === ".") {
-      const tsconfigField = packageJson.tsconfig;
-      return typeof tsconfigField === "string"
-        ? [join(packageDir, tsconfigField), join(packageDir, "tsconfig.json")]
-        : [join(packageDir, "tsconfig.json")];
-    }
+  if (subpath === ".") {
+    const tsconfigField = packageJson.tsconfig;
+    return typeof tsconfigField === "string"
+      ? [join(packageDir, tsconfigField), join(packageDir, "tsconfig.json")]
+      : [join(packageDir, "tsconfig.json")];
+  }
 
-    const file = join(packageDir, subpath);
-    return [...withJsonExtension(file), join(file, "tsconfig.json")];
-  });
-}
+  const file = join(packageDir, subpath);
+  return [...withJsonExtension(file), join(file, "tsconfig.json")];
+});
 
 /**
  * Finds `node_modules/<name>` in `fromDir` or the closest parent folder.
  */
-function findPackageDir(
+const findPackageDir = Effect.fn("tsconf-utils/findPackageDir")(function* (
   name: string,
   fromDir: string,
-): Effect.Effect<string | undefined, TSConfigReadError> {
-  return Effect.gen(function* () {
-    let dir = fromDir;
-    while (true) {
-      const packageDir = join(dir, "node_modules", name);
-      if (yield* isFile(join(packageDir, "package.json"))) return packageDir;
+): Effect.fn.Return<string | undefined, TSConfigReadError> {
+  yield* Effect.annotateCurrentSpan({ name, fromDir });
 
-      const parent = dirname(dir);
-      if (parent === dir) return;
-      dir = parent;
-    }
-  });
-}
+  let dir = fromDir;
+  while (true) {
+    const packageDir = join(dir, "node_modules", name);
+    if (yield* isFile(join(packageDir, "package.json"))) return packageDir;
+
+    const parent = dirname(dir);
+    if (parent === dir) return;
+    dir = parent;
+  }
+});
 
 /**
  * Resolves `subpath` (for example `"."` or `"./strict"`) against a package.json `exports` value.
