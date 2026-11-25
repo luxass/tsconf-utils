@@ -46,7 +46,7 @@ catalogs:
     typescript-5: npm:typescript@5.9.3
     typescript-6: npm:typescript@6.0.3
     typescript-7.1: npm:typescript@7.1.0-beta
-    vitest: 5.1.0
+    vitest: 5.1.1
 
   types:
     "@types/node": 24.19.2
