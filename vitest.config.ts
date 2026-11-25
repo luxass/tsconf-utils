@@ -1,6 +1,6 @@
 import { defineConfig } from "vitest/config";
 
-import { compilerIds } from "./tests/conformance/compiler-ids";
+import { compilerIds } from "./tests/conformance/compiler-ids.ts";
 
 export default defineConfig({
   test: {
