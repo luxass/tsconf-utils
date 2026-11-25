@@ -6,8 +6,32 @@ import { TSConfigExtendsCycleError, type TSConfigError, TSConfigParseError } fro
 import { findTSConfigEffect } from "./find";
 import { readJsonObject } from "./fs";
 import { isRecord, normalizeOwnPaths, resolvePathsTargets } from "./normalize";
+import { toPosixPath } from "./path";
 import { resolveExtends } from "./resolve-extends";
-import type { FindTSConfigOptions, TSConfigJSON, TSConfigResult } from "./types";
+import type {
+  LoadTSConfigOptions,
+  ParseTSConfigOptions,
+  ResolvedTSConfig,
+  TSConfigJSON,
+  TSConfigResult,
+} from "./types";
+
+// The top-level keys that TypeScript reads. `unknownKeys: "drop"` keeps only these.
+const KNOWN_KEYS = new Set([
+  "compilerOptions",
+  "include",
+  "exclude",
+  "files",
+  "references",
+  "watchOptions",
+  "typeAcquisition",
+  "compileOnSave",
+  "buildOptions",
+]);
+
+function dropUnknownKeys(config: ResolvedTSConfig): ResolvedTSConfig {
+  return Object.fromEntries(Object.entries(config).filter(([key]) => KNOWN_KEYS.has(key)));
+}
 
 // These objects merge key by key. Every other top-level key is replaced as a whole.
 const MERGED_OBJECT_KEYS = ["compilerOptions", "watchOptions", "typeAcquisition"] as const;
@@ -62,7 +86,7 @@ const parseFile = Effect.fn("tsconf-utils/parseFile")(function* (
     return yield* new TSConfigParseError({ path, reason: '"compilerOptions" must be an object' });
   }
 
-  const ownDir = dirname(path);
+  const ownDir = toPosixPath(dirname(path));
   const nextChain = [...chain, path];
   const configFiles = [path];
   let inherited: TSConfigJSON = {};
@@ -95,22 +119,24 @@ const parseFile = Effect.fn("tsconf-utils/parseFile")(function* (
  */
 export const parseTSConfigEffect = Effect.fn("tsconf-utils/parseTSConfig")(function* (
   path: string,
+  options: ParseTSConfigOptions = {},
 ): Effect.fn.Return<TSConfigResult, TSConfigError> {
-  const absolutePath = resolve(path);
+  const absolutePath = toPosixPath(resolve(path));
   yield* Effect.annotateCurrentSpan("path", absolutePath);
-  const rootConfigDir = dirname(absolutePath);
+  const rootConfigDir = toPosixPath(dirname(absolutePath));
   const parsed = yield* parseFile(absolutePath, rootConfigDir, []);
 
-  const options = parsed.config.compilerOptions;
-  if (options !== undefined && isRecord(options.paths)) {
-    const baseDir = options.baseUrl ?? parsed.pathsBaseDir ?? rootConfigDir;
+  const compilerOptions = parsed.config.compilerOptions;
+  if (compilerOptions !== undefined && isRecord(compilerOptions.paths)) {
+    const baseDir = compilerOptions.baseUrl ?? parsed.pathsBaseDir ?? rootConfigDir;
     parsed.config.compilerOptions = {
-      ...options,
-      paths: resolvePathsTargets(options.paths, baseDir, rootConfigDir),
+      ...compilerOptions,
+      paths: resolvePathsTargets(compilerOptions.paths, baseDir, rootConfigDir),
     };
   }
 
-  return { path: absolutePath, config: parsed.config, configFiles: parsed.configFiles };
+  const config = options.unknownKeys === "drop" ? dropUnknownKeys(parsed.config) : parsed.config;
+  return { path: absolutePath, config, configFiles: parsed.configFiles };
 });
 
 /**
@@ -119,9 +145,9 @@ export const parseTSConfigEffect = Effect.fn("tsconf-utils/parseTSConfig")(funct
  * Succeeds with `undefined` if no tsconfig file is found.
  */
 export const loadTSConfigEffect = Effect.fn("tsconf-utils/loadTSConfig")(function* (
-  options: FindTSConfigOptions = {},
+  options: LoadTSConfigOptions = {},
 ): Effect.fn.Return<TSConfigResult | undefined, TSConfigError> {
   const path = yield* findTSConfigEffect(options);
   if (path === undefined) return undefined;
-  return yield* parseTSConfigEffect(path);
+  return yield* parseTSConfigEffect(path, options);
 });

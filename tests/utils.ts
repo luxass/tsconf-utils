@@ -22,3 +22,11 @@ export function createFixture(files: Record<string, string | object>): string {
 
   return root;
 }
+
+/**
+ * Joins path segments and uses `/` as the separator, like every path tsconf-utils returns.
+ * Use it for expected paths, so tests pass on Windows too.
+ */
+export function posixJoin(...segments: string[]): string {
+  return join(...segments).replaceAll("\\", "/");
+}

@@ -5,6 +5,7 @@ import { Effect } from "effect";
 
 import type { TSConfigReadError } from "./errors";
 import { isFile } from "./fs";
+import { toPosixPath } from "./path";
 import type { FindTSConfigOptions } from "./types";
 
 /**
@@ -22,7 +23,7 @@ export const findTSConfigEffect = Effect.fn("tsconf-utils/findTSConfig")(functio
 
   while (true) {
     const candidate = join(dir, name);
-    if (yield* isFile(candidate)) return candidate;
+    if (yield* isFile(candidate)) return toPosixPath(candidate);
 
     const parent = dirname(dir);
     // `dirname` of the root returns the root itself.

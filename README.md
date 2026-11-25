@@ -37,14 +37,31 @@ if (result) {
 
 ### Functions
 
-| Sync                      | Promise               | Effect                      | Does                                                        |
-| ------------------------- | --------------------- | --------------------------- | ----------------------------------------------------------- |
-| `findTSConfigSync(opts?)` | `findTSConfig(opts?)` | `findTSConfigEffect(opts?)` | Returns the path of the closest tsconfig, or `undefined`.   |
-| `parseTSConfigSync(path)` | `parseTSConfig(path)` | `parseTSConfigEffect(path)` | Reads one tsconfig file and resolves all `extends` entries. |
-| `loadTSConfigSync(opts?)` | `loadTSConfig(opts?)` | `loadTSConfigEffect(opts?)` | `find` and then `parse`. Returns `undefined` if none found. |
+| Sync                             | Promise                      | Effect                             | Does                                                        |
+| -------------------------------- | ---------------------------- | ---------------------------------- | ----------------------------------------------------------- |
+| `findTSConfigSync(opts?)`        | `findTSConfig(opts?)`        | `findTSConfigEffect(opts?)`        | Returns the path of the closest tsconfig, or `undefined`.   |
+| `parseTSConfigSync(path, opts?)` | `parseTSConfig(path, opts?)` | `parseTSConfigEffect(path, opts?)` | Reads one tsconfig file and resolves all `extends` entries. |
+| `loadTSConfigSync(opts?)`        | `loadTSConfig(opts?)`        | `loadTSConfigEffect(opts?)`        | `find` and then `parse`. Returns `undefined` if none found. |
 
-`opts` is `{ cwd?: string; name?: string }`. The defaults are `process.cwd()` and `"tsconfig.json"`.
-The search goes from `cwd` up to the file system root.
+Options:
+
+| Option        | Used by     | Default           | Does                                                          |
+| ------------- | ----------- | ----------------- | ------------------------------------------------------------- |
+| `cwd`         | find, load  | `process.cwd()`   | The folder to start in. The search goes up to the root.       |
+| `name`        | find, load  | `"tsconfig.json"` | The file name to look for.                                    |
+| `unknownKeys` | parse, load | `"keep"`          | `"keep"` or `"drop"` top-level keys TypeScript does not know. |
+
+Every returned path is absolute and uses `/`, on every OS, like `tsc` prints paths.
+
+### Unknown keys
+
+Tools such as ts-node and Vue read their own top-level keys from a tsconfig, for example `"ts-node"` or `"vueCompilerOptions"`. By default these keys are kept and inherited through `extends`. A child's value replaces the parent's value as a whole.
+
+Set `unknownKeys: "drop"` to get only the keys that TypeScript reads, like `tsc --showConfig`:
+
+```ts
+const { config } = parseTSConfigSync("tsconfig.json", { unknownKeys: "drop" });
+```
 
 ### Errors
 
@@ -108,7 +125,7 @@ Install a tracer (for example with `@effect/opentelemetry`) to see them. Without
 - The result fields are now `path`, `config`, and `configFiles` (before: `path`, `tsconfig`, and `files`).
 - Functions return `undefined` and not `null`.
 - Broken configs throw a typed error. Before, `resolveTSConfig` returned `null` and sometimes wrote to the console.
-- All path options, `include`, `exclude`, `files`, and `paths` targets are absolute paths. Before, only `baseUrl` was changed.
+- All path options, `include`, `exclude`, `files`, and `paths` targets are absolute paths that use `/`. Before, only `baseUrl` was changed.
 - The package is ESM only and requires Node.js 22.12 or later.
 
 ## 📄 License

@@ -1,10 +1,8 @@
-import { join } from "node:path";
-
 import { Effect, Exit, Option, Tracer } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { parseTSConfigEffect } from "../src";
-import { createFixture } from "./utils";
+import { createFixture, posixJoin } from "./utils";
 
 /** A tracer that keeps every span it creates. */
 function createRecordingTracer() {
@@ -36,7 +34,7 @@ describe("tracing", () => {
     const { spans, tracer } = createRecordingTracer();
 
     Effect.runSync(
-      parseTSConfigEffect(join(root, "tsconfig.json")).pipe(Effect.withTracer(tracer)),
+      parseTSConfigEffect(posixJoin(root, "tsconfig.json")).pipe(Effect.withTracer(tracer)),
     );
 
     expect(spans.map((span) => [span.name, parentName(span)])).toEqual([
@@ -59,7 +57,7 @@ describe("tracing", () => {
         span.name === "tsconf-utils/resolveExtends" && span.attributes.get("specifier") === "pkg",
     );
     expect(packageResolve?.attributes.get("resolved")).toBe(
-      join(root, "node_modules/pkg/tsconfig.json"),
+      posixJoin(root, "node_modules/pkg/tsconfig.json"),
     );
   });
 
@@ -68,7 +66,7 @@ describe("tracing", () => {
     const { spans, tracer } = createRecordingTracer();
 
     Effect.runSyncExit(
-      parseTSConfigEffect(join(root, "tsconfig.json")).pipe(Effect.withTracer(tracer)),
+      parseTSConfigEffect(posixJoin(root, "tsconfig.json")).pipe(Effect.withTracer(tracer)),
     );
 
     const failedSpanNames = spans

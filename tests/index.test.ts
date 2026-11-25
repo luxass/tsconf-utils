@@ -1,5 +1,3 @@
-import { join } from "node:path";
-
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -18,7 +16,7 @@ import {
   TSConfigParseError,
   TSConfigReadError,
 } from "../src";
-import { createFixture } from "./utils";
+import { createFixture, posixJoin } from "./utils";
 
 describe("findTSConfig", () => {
   it("finds the closest tsconfig in a parent folder", async () => {
@@ -26,11 +24,11 @@ describe("findTSConfig", () => {
       "tsconfig.json": {},
       "packages/app/src/.gitkeep": "",
     });
-    const cwd = join(root, "packages/app/src");
+    const cwd = posixJoin(root, "packages/app/src");
 
-    expect(findTSConfigSync({ cwd })).toBe(join(root, "tsconfig.json"));
-    expect(await findTSConfig({ cwd })).toBe(join(root, "tsconfig.json"));
-    expect(Effect.runSync(findTSConfigEffect({ cwd }))).toBe(join(root, "tsconfig.json"));
+    expect(findTSConfigSync({ cwd })).toBe(posixJoin(root, "tsconfig.json"));
+    expect(await findTSConfig({ cwd })).toBe(posixJoin(root, "tsconfig.json"));
+    expect(Effect.runSync(findTSConfigEffect({ cwd }))).toBe(posixJoin(root, "tsconfig.json"));
   });
 
   it("prefers the closest file", () => {
@@ -39,14 +37,16 @@ describe("findTSConfig", () => {
       "app/tsconfig.json": {},
     });
 
-    expect(findTSConfigSync({ cwd: join(root, "app") })).toBe(join(root, "app/tsconfig.json"));
+    expect(findTSConfigSync({ cwd: posixJoin(root, "app") })).toBe(
+      posixJoin(root, "app/tsconfig.json"),
+    );
   });
 
   it("supports a custom file name", () => {
     const root = createFixture({ "tsconfig.build.json": {} });
 
     expect(findTSConfigSync({ cwd: root, name: "tsconfig.build.json" })).toBe(
-      join(root, "tsconfig.build.json"),
+      posixJoin(root, "tsconfig.build.json"),
     );
   });
 
@@ -54,7 +54,7 @@ describe("findTSConfig", () => {
     const root = createFixture({ "tsconfig.json/.gitkeep": "" });
 
     expect(findTSConfigSync({ cwd: root, name: "tsconfig.json" })).not.toBe(
-      join(root, "tsconfig.json"),
+      posixJoin(root, "tsconfig.json"),
     );
   });
 
@@ -67,7 +67,9 @@ describe("findTSConfig", () => {
   it("works when cwd is a file", () => {
     const root = createFixture({ "tsconfig.json": {}, "src/index.ts": "" });
 
-    expect(findTSConfigSync({ cwd: join(root, "src/index.ts") })).toBe(join(root, "tsconfig.json"));
+    expect(findTSConfigSync({ cwd: posixJoin(root, "src/index.ts") })).toBe(
+      posixJoin(root, "tsconfig.json"),
+    );
   });
 });
 
@@ -78,12 +80,12 @@ describe("parseTSConfig: extends", () => {
       "configs/base.json": { compilerOptions: { target: "es2022", strict: false } },
     });
 
-    const result = parseTSConfigSync(join(root, "tsconfig.json"));
+    const result = parseTSConfigSync(posixJoin(root, "tsconfig.json"));
 
     expect(result.config).toEqual({ compilerOptions: { target: "es2022", strict: true } });
     expect(result.configFiles).toEqual([
-      join(root, "tsconfig.json"),
-      join(root, "configs/base.json"),
+      posixJoin(root, "tsconfig.json"),
+      posixJoin(root, "configs/base.json"),
     ]);
   });
 
@@ -94,7 +96,7 @@ describe("parseTSConfig: extends", () => {
       "two.json": { compilerOptions: { target: "es2022" } },
     });
 
-    expect(parseTSConfigSync(join(root, "tsconfig.json")).config.compilerOptions).toEqual({
+    expect(parseTSConfigSync(posixJoin(root, "tsconfig.json")).config.compilerOptions).toEqual({
       target: "es2022",
       strict: true,
     });
@@ -105,7 +107,7 @@ describe("parseTSConfig: extends", () => {
       "base.json": { compilerOptions: { target: "WRONG" } },
       "app/tsconfig.json": { extends: "./base.json" },
     });
-    const path = join(root, "app/tsconfig.json");
+    const path = posixJoin(root, "app/tsconfig.json");
 
     expect(() => parseTSConfigSync(path)).toThrow(TSConfigExtendsNotFoundError);
     expect(() => parseTSConfigSync(path)).toThrow(
@@ -121,16 +123,16 @@ describe("parseTSConfig: extends", () => {
 
     let error: unknown;
     try {
-      parseTSConfigSync(join(root, "a.json"));
+      parseTSConfigSync(posixJoin(root, "a.json"));
     } catch (caught) {
       error = caught;
     }
 
     expect(error).toBeInstanceOf(TSConfigExtendsCycleError);
     expect((error as TSConfigExtendsCycleError).chain).toEqual([
-      join(root, "a.json"),
-      join(root, "b.json"),
-      join(root, "a.json"),
+      posixJoin(root, "a.json"),
+      posixJoin(root, "b.json"),
+      posixJoin(root, "a.json"),
     ]);
   });
 
@@ -142,7 +144,7 @@ describe("parseTSConfig: extends", () => {
       "shared.json": { compilerOptions: { strict: true } },
     });
 
-    expect(parseTSConfigSync(join(root, "tsconfig.json")).config.compilerOptions).toEqual({
+    expect(parseTSConfigSync(posixJoin(root, "tsconfig.json")).config.compilerOptions).toEqual({
       strict: true,
     });
   });
@@ -153,7 +155,9 @@ describe("parseTSConfig: extends", () => {
       "base.json": { references: [{ path: "./other" }], compileOnSave: true },
     });
 
-    expect(parseTSConfigSync(join(root, "tsconfig.json")).config).toEqual({ compileOnSave: true });
+    expect(parseTSConfigSync(posixJoin(root, "tsconfig.json")).config).toEqual({
+      compileOnSave: true,
+    });
   });
 
   it("merges watchOptions key by key and replaces include as a whole", () => {
@@ -166,8 +170,8 @@ describe("parseTSConfig: extends", () => {
       "base.json": { include: ["lib", "test"], watchOptions: { watchDirectory: "useFsEvents" } },
     });
 
-    expect(parseTSConfigSync(join(root, "tsconfig.json")).config).toEqual({
-      include: [join(root, "src")],
+    expect(parseTSConfigSync(posixJoin(root, "tsconfig.json")).config).toEqual({
+      include: [posixJoin(root, "src")],
       watchOptions: { watchFile: "useFsEvents", watchDirectory: "useFsEvents" },
     });
   });
@@ -178,7 +182,7 @@ function parseWithPackage(specifier: string, files: Record<string, string | obje
     "app/tsconfig.json": { extends: specifier },
     ...files,
   });
-  return parseTSConfigSync(join(root, "app/tsconfig.json")).config.compilerOptions;
+  return parseTSConfigSync(posixJoin(root, "app/tsconfig.json")).config.compilerOptions;
 }
 
 describe("parseTSConfig: package extends", () => {
@@ -294,15 +298,15 @@ describe("parseTSConfig: paths", () => {
       },
     });
 
-    expect(parseTSConfigSync(join(root, "app/tsconfig.json")).config).toEqual({
+    expect(parseTSConfigSync(posixJoin(root, "app/tsconfig.json")).config).toEqual({
       compilerOptions: {
-        baseUrl: join(root, "base/src"),
-        outDir: join(root, "base/dist"),
-        rootDir: join(root, "base/src"),
-        typeRoots: [join(root, "base/types")],
+        baseUrl: posixJoin(root, "base/src"),
+        outDir: posixJoin(root, "base/dist"),
+        rootDir: posixJoin(root, "base/src"),
+        typeRoots: [posixJoin(root, "base/types")],
       },
-      include: [join(root, "base/src/**/*")],
-      exclude: [join(root, "base/dist")],
+      include: [posixJoin(root, "base/src/**/*")],
+      exclude: [posixJoin(root, "base/dist")],
     });
   });
 
@@ -312,9 +316,9 @@ describe("parseTSConfig: paths", () => {
       "base.json": { compilerOptions: { baseUrl: "./src" } },
     });
 
-    expect(parseTSConfigSync(join(root, "a/tsconfig.json")).config.compilerOptions?.baseUrl).toBe(
-      join(root, "src"),
-    );
+    expect(
+      parseTSConfigSync(posixJoin(root, "a/tsconfig.json")).config.compilerOptions?.baseUrl,
+    ).toBe(posixJoin(root, "src"));
   });
 
   it("replaces ${configDir} with the folder of the first config", () => {
@@ -326,12 +330,12 @@ describe("parseTSConfig: paths", () => {
       },
     });
 
-    expect(parseTSConfigSync(join(root, "app/tsconfig.json")).config).toEqual({
+    expect(parseTSConfigSync(posixJoin(root, "app/tsconfig.json")).config).toEqual({
       compilerOptions: {
-        outDir: join(root, "app/dist"),
-        paths: { "@/*": [join(root, "app/src/*")] },
+        outDir: posixJoin(root, "app/dist"),
+        paths: { "@/*": [posixJoin(root, "app/src/*")] },
       },
-      include: [join(root, "app/src")],
+      include: [posixJoin(root, "app/src")],
     });
   });
 
@@ -342,8 +346,8 @@ describe("parseTSConfig: paths", () => {
     });
 
     expect(
-      parseTSConfigSync(join(root, "app/tsconfig.json")).config.compilerOptions?.paths,
-    ).toEqual({ "@/*": [join(root, "lib/*")] });
+      parseTSConfigSync(posixJoin(root, "app/tsconfig.json")).config.compilerOptions?.paths,
+    ).toEqual({ "@/*": [posixJoin(root, "lib/*")] });
   });
 
   it("resolves paths targets from baseUrl when it is set", () => {
@@ -353,8 +357,8 @@ describe("parseTSConfig: paths", () => {
     });
 
     expect(
-      parseTSConfigSync(join(root, "app/tsconfig.json")).config.compilerOptions?.paths,
-    ).toEqual({ "@/*": [join(root, "app/src/lib/*")] });
+      parseTSConfigSync(posixJoin(root, "app/tsconfig.json")).config.compilerOptions?.paths,
+    ).toEqual({ "@/*": [posixJoin(root, "app/src/lib/*")] });
   });
 });
 
@@ -370,7 +374,7 @@ describe("parseTSConfig: file content", () => {
       }`,
     });
 
-    expect(parseTSConfigSync(join(root, "tsconfig.json")).config).toEqual({
+    expect(parseTSConfigSync(posixJoin(root, "tsconfig.json")).config).toEqual({
       compilerOptions: { strict: true },
     });
   });
@@ -378,7 +382,7 @@ describe("parseTSConfig: file content", () => {
   it("treats an empty file as an empty config", () => {
     const root = createFixture({ "tsconfig.json": "" });
 
-    expect(parseTSConfigSync(join(root, "tsconfig.json")).config).toEqual({});
+    expect(parseTSConfigSync(posixJoin(root, "tsconfig.json")).config).toEqual({});
   });
 
   it.each([
@@ -389,13 +393,13 @@ describe("parseTSConfig: file content", () => {
   ])("fails with TSConfigParseError for %s", (_name, content) => {
     const root = createFixture({ "tsconfig.json": content });
 
-    expect(() => parseTSConfigSync(join(root, "tsconfig.json"))).toThrow(TSConfigParseError);
+    expect(() => parseTSConfigSync(posixJoin(root, "tsconfig.json"))).toThrow(TSConfigParseError);
   });
 
   it("fails with TSConfigReadError for a missing file", () => {
     const root = createFixture({ ".gitkeep": "" });
 
-    expect(() => parseTSConfigSync(join(root, "tsconfig.json"))).toThrow(TSConfigReadError);
+    expect(() => parseTSConfigSync(posixJoin(root, "tsconfig.json"))).toThrow(TSConfigReadError);
   });
 });
 
@@ -406,11 +410,11 @@ describe("loadTSConfig", () => {
       "src/.gitkeep": "",
     });
     const expected = {
-      path: join(root, "tsconfig.json"),
+      path: posixJoin(root, "tsconfig.json"),
       config: { compilerOptions: { strict: true } },
-      configFiles: [join(root, "tsconfig.json")],
+      configFiles: [posixJoin(root, "tsconfig.json")],
     };
-    const cwd = join(root, "src");
+    const cwd = posixJoin(root, "src");
 
     expect(loadTSConfigSync({ cwd })).toEqual(expected);
     expect(await loadTSConfig({ cwd })).toEqual(expected);
@@ -437,18 +441,18 @@ describe("errors", () => {
   it("rejects the Promise API with the tagged error", async () => {
     const root = createFixture({ "tsconfig.json": { extends: "./missing.json" } });
 
-    await expect(parseTSConfig(join(root, "tsconfig.json"))).rejects.toMatchObject({
+    await expect(parseTSConfig(posixJoin(root, "tsconfig.json"))).rejects.toMatchObject({
       _tag: "TSConfigExtendsNotFoundError",
       specifier: "./missing.json",
-      from: join(root, "tsconfig.json"),
-      chain: [join(root, "tsconfig.json")],
+      from: posixJoin(root, "tsconfig.json"),
+      chain: [posixJoin(root, "tsconfig.json")],
     });
   });
 
   it("exposes typed errors in the Effect API", () => {
     const root = createFixture({ "tsconfig.json": { extends: "./missing.json" } });
 
-    const program = parseTSConfigEffect(join(root, "tsconfig.json")).pipe(
+    const program = parseTSConfigEffect(posixJoin(root, "tsconfig.json")).pipe(
       Effect.map(() => "parsed"),
       Effect.catchTag("TSConfigExtendsNotFoundError", (error) =>
         Effect.succeed(`missing ${error.specifier}`),
@@ -456,5 +460,84 @@ describe("errors", () => {
     );
 
     expect(Effect.runSync(program)).toBe("missing ./missing.json");
+  });
+});
+
+function createUnknownKeysFixture() {
+  return createFixture({
+    "tsconfig.json": {
+      extends: "./base.json",
+      vueCompilerOptions: { target: 3.5 },
+      compilerOptions: { strict: true },
+    },
+    "base.json": { "ts-node": { esm: true }, vueCompilerOptions: { target: 3 } },
+  });
+}
+
+describe("unknownKeys", () => {
+  it("keeps unknown top-level keys by default, and a child replaces the parent's value", () => {
+    const root = createUnknownKeysFixture();
+
+    expect(parseTSConfigSync(posixJoin(root, "tsconfig.json")).config).toEqual({
+      "ts-node": { esm: true },
+      vueCompilerOptions: { target: 3.5 },
+      compilerOptions: { strict: true },
+    });
+  });
+
+  it("drops unknown top-level keys with unknownKeys: drop", async () => {
+    const root = createUnknownKeysFixture();
+    const expected = { compilerOptions: { strict: true } };
+
+    expect(
+      parseTSConfigSync(posixJoin(root, "tsconfig.json"), { unknownKeys: "drop" }).config,
+    ).toEqual(expected);
+    expect(
+      (await parseTSConfig(posixJoin(root, "tsconfig.json"), { unknownKeys: "drop" })).config,
+    ).toEqual(expected);
+    expect(loadTSConfigSync({ cwd: root, unknownKeys: "drop" })?.config).toEqual(expected);
+  });
+
+  it("keeps every key that TypeScript knows with unknownKeys: drop", () => {
+    const known = {
+      compilerOptions: { strict: true },
+      include: ["src"],
+      exclude: ["dist"],
+      files: ["index.ts"],
+      references: [{ path: "./other" }],
+      watchOptions: { watchFile: "useFsEvents" },
+      typeAcquisition: { enable: false },
+      compileOnSave: true,
+      buildOptions: { verbose: true },
+    };
+    const root = createFixture({ "tsconfig.json": { ...known, "ts-node": {} } });
+
+    const { config } = parseTSConfigSync(posixJoin(root, "tsconfig.json"), { unknownKeys: "drop" });
+
+    expect(new Set(Object.keys(config))).toEqual(new Set(Object.keys(known)));
+  });
+});
+
+describe("path separators", () => {
+  // Every returned path uses `/`. On Windows this checks the conversion. On other systems,
+  // `\` is never added, so the test passes trivially.
+  it("returns only / separated paths", () => {
+    const root = createFixture({
+      "app/tsconfig.json": {
+        extends: ["../base.json", "pkg"],
+        compilerOptions: { outDir: "./dist", paths: { "@/*": ["./src/*"] } },
+        include: ["src/**/*"],
+      },
+      "base.json": { compilerOptions: { rootDir: "${configDir}/src" }, exclude: ["./out"] },
+      "node_modules/pkg/package.json": { name: "pkg" },
+      "node_modules/pkg/tsconfig.json": { compilerOptions: { typeRoots: ["./types"] } },
+    });
+
+    const found = findTSConfigSync({ cwd: posixJoin(root, "app") });
+    const result = parseTSConfigSync(found!);
+
+    expect(found).not.toContain("\\");
+    expect(JSON.stringify(result)).not.toContain("\\\\");
+    expect(result.config.compilerOptions?.outDir).toBe(posixJoin(root, "app/dist"));
   });
 });

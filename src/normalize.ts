@@ -1,5 +1,6 @@
 import { join, resolve } from "node:path";
 
+import { toPosixPath } from "./path";
 import type { TSConfigCompilerOptions, TSConfigJSON } from "./types";
 
 const CONFIG_DIR_TEMPLATE = "${configDir}";
@@ -29,9 +30,9 @@ const TOP_LEVEL_PATH_LISTS = ["include", "exclude", "files"] as const;
  */
 export function resolvePathValue(value: string, ownDir: string, rootConfigDir: string): string {
   if (value.startsWith(CONFIG_DIR_TEMPLATE)) {
-    return join(rootConfigDir, value.slice(CONFIG_DIR_TEMPLATE.length));
+    return toPosixPath(join(rootConfigDir, value.slice(CONFIG_DIR_TEMPLATE.length)));
   }
-  return resolve(ownDir, value);
+  return toPosixPath(resolve(ownDir, value));
 }
 
 function resolvePathList(value: unknown, ownDir: string, rootConfigDir: string): unknown {

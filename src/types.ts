@@ -44,7 +44,7 @@ export interface TSConfigJSON extends ResolvedTSConfig {
 }
 
 export interface TSConfigResult {
-  /** Absolute path of the tsconfig file that was parsed. */
+  /** Absolute path of the tsconfig file that was parsed. All returned paths use `/`. */
   path: string;
   /** The merged config. */
   config: ResolvedTSConfig;
@@ -58,3 +58,19 @@ export interface FindTSConfigOptions {
   /** The file name to look for. Default: `"tsconfig.json"`. */
   name?: string;
 }
+
+export interface ParseTSConfigOptions {
+  /**
+   * What to do with top-level keys that TypeScript does not know, such as `"ts-node"` or
+   * `"vueCompilerOptions"`.
+   *
+   * - `"keep"`: return them. A config inherits them through `extends`, and a child's value
+   *   replaces the parent's value as a whole. Tools like ts-node read their own keys this way.
+   * - `"drop"`: return only the keys that TypeScript knows, like `tsc --showConfig`.
+   *
+   * Default: `"keep"`.
+   */
+  unknownKeys?: "keep" | "drop";
+}
+
+export interface LoadTSConfigOptions extends FindTSConfigOptions, ParseTSConfigOptions {}

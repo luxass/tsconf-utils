@@ -2,7 +2,12 @@ import { Effect } from "effect";
 
 import { findTSConfigEffect } from "./find";
 import { loadTSConfigEffect, parseTSConfigEffect } from "./parse";
-import type { FindTSConfigOptions, TSConfigResult } from "./types";
+import type {
+  FindTSConfigOptions,
+  LoadTSConfigOptions,
+  ParseTSConfigOptions,
+  TSConfigResult,
+} from "./types";
 
 export {
   TSConfigExtendsCycleError,
@@ -15,6 +20,8 @@ export { findTSConfigEffect } from "./find";
 export { loadTSConfigEffect, parseTSConfigEffect } from "./parse";
 export type {
   FindTSConfigOptions,
+  LoadTSConfigOptions,
+  ParseTSConfigOptions,
   ResolvedTSConfig,
   TSConfigCompilerOptions,
   TSConfigJSON,
@@ -45,13 +52,16 @@ export function findTSConfig(options?: FindTSConfigOptions): Promise<string | un
  * @throws {TSConfigError} if a file cannot be read or parsed,
  *   an `extends` entry cannot be resolved, or `extends` entries form a loop.
  */
-export function parseTSConfigSync(path: string): TSConfigResult {
-  return Effect.runSync(parseTSConfigEffect(path));
+export function parseTSConfigSync(path: string, options?: ParseTSConfigOptions): TSConfigResult {
+  return Effect.runSync(parseTSConfigEffect(path, options));
 }
 
 /** Promise version of {@link parseTSConfigSync}. */
-export function parseTSConfig(path: string): Promise<TSConfigResult> {
-  return Effect.runPromise(parseTSConfigEffect(path));
+export function parseTSConfig(
+  path: string,
+  options?: ParseTSConfigOptions,
+): Promise<TSConfigResult> {
+  return Effect.runPromise(parseTSConfigEffect(path, options));
 }
 
 /**
@@ -60,11 +70,11 @@ export function parseTSConfig(path: string): Promise<TSConfigResult> {
  *
  * @throws {TSConfigError} if the tsconfig file that was found is broken.
  */
-export function loadTSConfigSync(options?: FindTSConfigOptions): TSConfigResult | undefined {
+export function loadTSConfigSync(options?: LoadTSConfigOptions): TSConfigResult | undefined {
   return Effect.runSync(loadTSConfigEffect(options));
 }
 
 /** Promise version of {@link loadTSConfigSync}. */
-export function loadTSConfig(options?: FindTSConfigOptions): Promise<TSConfigResult | undefined> {
+export function loadTSConfig(options?: LoadTSConfigOptions): Promise<TSConfigResult | undefined> {
   return Effect.runPromise(loadTSConfigEffect(options));
 }

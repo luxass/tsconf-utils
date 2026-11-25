@@ -8,6 +8,7 @@ import {
   type TSConfigReadError,
 } from "./errors";
 import { isFile, readJsonObject } from "./fs";
+import { toPosixPath } from "./path";
 
 // TypeScript resolves package `exports` for `extends` with these conditions. `import` does not match.
 const EXPORTS_CONDITIONS = new Set(["node", "require", "types", "default"]);
@@ -35,8 +36,9 @@ export const resolveExtends = Effect.fn("tsconf-utils/resolveExtends")(function*
 
   for (const candidate of candidates) {
     if (yield* isFile(candidate)) {
-      yield* Effect.annotateCurrentSpan("resolved", candidate);
-      return candidate;
+      const resolved = toPosixPath(candidate);
+      yield* Effect.annotateCurrentSpan("resolved", resolved);
+      return resolved;
     }
   }
 
