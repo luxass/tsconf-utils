@@ -34,8 +34,10 @@ catalogs:
     typescript: 7.0.2
 
   runtime:
-    effect: 4.1.4
-    jsonc-parse: 2.0.0
+    # Ranges, not exact versions: the published package.json gets these values, and an exact
+    # pin makes users with another effect version install a second copy.
+    effect: ^4.1.4
+    jsonc-parse: ^2.0.0
 
   test:
     tsc-rs: 0.8.0
