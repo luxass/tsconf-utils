@@ -26,27 +26,25 @@
     "dist"
   ],
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.cts",
+  "sideEffects": false,
+  "types": "./dist/index.d.mts",
   "exports": {
-    ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
-    },
+    ".": "./dist/index.mjs",
     "./package.json": "./package.json"
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "vitest",
-    "test": "vitest --run",
+    "dev": "vitest --project unit",
+    "test": "vitest --run --project unit",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:conformance": "vitest --run --project \"conformance:*\""
   },
   "dependencies": {
+    "effect": "catalog:runtime",
     "jsonc-parse": "catalog:runtime"
   },
   "devDependencies": {
@@ -54,12 +52,18 @@
     "oxfmt": "catalog:dev",
     "oxlint": "catalog:dev",
     "publint": "catalog:dev",
+    "tsc-rs": "catalog:test",
+    "tsc-ts": "catalog:test",
     "tsdown": "catalog:dev",
+    "tsrs": "catalog:test",
     "typescript": "catalog:dev",
+    "typescript-5": "catalog:test",
+    "typescript-6": "catalog:test",
+    "typescript-7.1": "catalog:test",
     "vitest": "catalog:test"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12"
   },
   "packageManager": "pnpm@12.21.0"
 }

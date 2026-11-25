@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  ci:
+    uses: luxass/shared-workflows/.github/workflows/reusable-ci.yaml@10298e06aecc428b39ef4121636400396b53a1fa # v0.16.0
+    permissions:
+      contents: read
+    with:
+      node-version: "24"
+      fmt: true
+      fmt-script: "fmt:check"
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    uses: luxass/shared-workflows/.github/workflows/reusable-test.yaml@10298e06aecc428b39ef4121636400396b53a1fa # v0.16.0
+    permissions:
+      contents: read
+    with:
+      runs-on: ${{ matrix.os }}
+      node-version: "24"
+
+  # The compiler half of the conformance check (tests/conformance/README.md): one job per
+  # compiler, each checking that compiler against the expected results in tests/conformance/cases.ts.
+  # Keep this list in sync with tests/conformance/compiler-ids.ts (tests/ci-matrix.test.ts checks it).
+  # Only the released TypeScript versions are the reference. Do not make the jobs for
+  # typescript-7.1 (a pre-release) or tsc-ts, tsc-rs, and tsrs (ports) required status checks.
+  conformance:
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - typescript-5.9
+          - typescript-6.0
+          - typescript-7.0
+          - typescript-7.1
+          - tsc-ts
+          - tsc-rs
+          - tsrs
+    uses: luxass/shared-workflows/.github/workflows/reusable-test.yaml@10298e06aecc428b39ef4121636400396b53a1fa # v0.16.0
+    permissions:
+      contents: read
+    with:
+      node-version: "24"
+      test-script: "vitest --run --project conformance:${{ matrix.compiler }}"

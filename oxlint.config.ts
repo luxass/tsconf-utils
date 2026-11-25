@@ -18,4 +18,14 @@ export default defineConfig({
     "eslint/max-lines-per-function": ["warn", { skipBlankLines: true, skipComments: true }],
     curly: "off",
   },
+  overrides: [
+    {
+      // `describe` blocks group many small tests, so they are long by design.
+      files: ["tests/**/*.ts"],
+      rules: {
+        "eslint/max-lines": "off",
+        "eslint/max-lines-per-function": "off",
+      },
+    },
+  ],
 });

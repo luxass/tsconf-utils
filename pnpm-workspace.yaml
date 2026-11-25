@@ -6,6 +6,25 @@ strictDepBuilds: true
 blockExoticSubdeps: true
 catalogMode: prefer
 
+# tsrs is a conformance test compiler (tests/conformance/compilers.ts).
+# trustPolicy flags it as a "possible package takeover": the npm name had another owner in 2024.
+# The oxc-project releases are published with provenance from oxc-project/tsrs (release.yml).
+# Pin exact versions here and review again on every tsrs update.
+# 7.1.0-beta.tsrs5 is skipped: 4 of its 8 @tsrs/* attestation URLs return 404.
+# The minimumReleaseAgeExclude entries are only needed until 2026-11-25T18:55Z, when tsrs4 is 5 days old.
+trustPolicyExclude:
+  - tsrs@7.1.0-beta.tsrs4
+minimumReleaseAgeExclude:
+  - tsrs@7.1.0-beta.tsrs4
+  - "@tsrs/darwin-arm64@7.1.0-beta.tsrs4"
+  - "@tsrs/darwin-x64@7.1.0-beta.tsrs4"
+  - "@tsrs/linux-arm64-gnu@7.1.0-beta.tsrs4"
+  - "@tsrs/linux-arm64-musl@7.1.0-beta.tsrs4"
+  - "@tsrs/linux-x64-gnu@7.1.0-beta.tsrs4"
+  - "@tsrs/linux-x64-musl@7.1.0-beta.tsrs4"
+  - "@tsrs/win32-arm64@7.1.0-beta.tsrs4"
+  - "@tsrs/win32-x64@7.1.0-beta.tsrs4"
+
 catalogs:
   dev:
     oxfmt: 0.79.0
@@ -15,9 +34,16 @@ catalogs:
     typescript: 7.0.2
 
   runtime:
+    effect: 4.1.4
     jsonc-parse: 2.0.0
 
   test:
+    tsc-rs: 0.8.0
+    tsc-ts: 0.1.5
+    tsrs: 7.1.0-beta.tsrs4
+    typescript-5: npm:typescript@5.9.3
+    typescript-6: npm:typescript@6.0.3
+    typescript-7.1: npm:typescript@7.1.0-beta
     vitest: 5.1.0
 
   types:
