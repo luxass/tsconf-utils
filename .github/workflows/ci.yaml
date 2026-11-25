@@ -32,7 +32,8 @@ jobs:
       runs-on: ${{ matrix.os }}
       node-version: "24"
 
-  # Compares our output with `tsc --showConfig` from TypeScript 5.9, 6.0, and 7.0.
+  # Checks that TypeScript 5.9, 6.0, and 7.0 agree with the expected results in
+  # tests/conformance/cases.ts. See tests/conformance/README.md.
   conformance:
     uses: luxass/shared-workflows/.github/workflows/reusable-test.yaml@10298e06aecc428b39ef4121636400396b53a1fa # v0.16.0
     permissions:
@@ -50,3 +51,13 @@ jobs:
     with:
       node-version: "24"
       test-script: "test:conformance:next"
+
+  # Same check against ports of the TypeScript compiler: tsc-ts, tsc-rs, and tsrs.
+  # They are not the reference, so do not mark this job as a required status check.
+  conformance-ports:
+    uses: luxass/shared-workflows/.github/workflows/reusable-test.yaml@10298e06aecc428b39ef4121636400396b53a1fa # v0.16.0
+    permissions:
+      contents: read
+    with:
+      node-version: "24"
+      test-script: "test:conformance:ports"
