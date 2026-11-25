@@ -190,10 +190,10 @@ catalogs:
       version: 7.0.2
   runtime:
     effect:
-      specifier: 4.1.4
+      specifier: ^4.1.4
       version: 4.1.4
     jsonc-parse:
-      specifier: 2.0.0
+      specifier: ^2.0.0
       version: 2.0.0
   test:
     tsc-rs:
