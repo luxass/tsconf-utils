@@ -43,7 +43,7 @@ catalogs:
     tsc-rs: 0.8.0
     tsc-ts: 0.1.5
     tsrs: 7.1.0-beta.tsrs4
-    typescript-5: npm:typescript@5.9.3
+    typescript-5: npm:typescript@7.0.2
     typescript-6: npm:typescript@6.0.3
     typescript-7.1: npm:typescript@7.1.0-beta
     vitest: 5.1.0

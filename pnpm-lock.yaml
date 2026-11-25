@@ -206,8 +206,8 @@ catalogs:
       specifier: 7.1.0-beta.tsrs4
       version: 7.1.0-beta.tsrs4
     typescript-5:
-      specifier: npm:typescript@5.9.3
-      version: 5.9.3
+      specifier: npm:typescript@7.0.2
+      version: 7.0.2
     typescript-6:
       specifier: npm:typescript@6.0.3
       version: 6.0.3
@@ -262,7 +262,7 @@ importers:
         version: 7.0.2
       typescript-5:
         specifier: catalog:test
-        version: typescript@5.9.3
+        version: typescript@7.0.2
       typescript-6:
         specifier: catalog:test
         version: typescript@6.0.3
@@ -1536,11 +1536,6 @@ packages:
     engines: {node: '>=16.20.0'}
     hasBin: true
 
-  typescript@5.9.3:
-    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-
   typescript@6.0.3:
     resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
@@ -2474,8 +2469,6 @@ snapshots:
       '@tsrs/linux-x64-musl': 7.1.0-beta.tsrs4
       '@tsrs/win32-arm64': 7.1.0-beta.tsrs4
       '@tsrs/win32-x64': 7.1.0-beta.tsrs4
-
-  typescript@5.9.3: {}
 
   typescript@6.0.3: {}
 
