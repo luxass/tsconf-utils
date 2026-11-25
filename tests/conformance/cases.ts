@@ -3,7 +3,7 @@
  *
  * Two checks use every case:
  * - `ours.test.ts` checks that `parseTSConfigSync` returns exactly `expected`.
- * - `typescript.test.ts`, `typescript-next.test.ts`, and `ports.test.ts` check that each compiler
+ * - `compilers.test.ts` checks, once per compiler in `compiler-ids.ts`, that the compiler
  *   agrees with `expected`, through `--showConfig`, its JavaScript API, or `--noEmit`.
  * If both pass, we and the compiler agree, and the agreed result is written here for review.
  * See README.md in this folder.

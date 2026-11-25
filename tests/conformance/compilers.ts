@@ -3,6 +3,8 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import process from "node:process";
 
+import type { CompilerId } from "./compiler-ids";
+
 const require = createRequire(import.meta.url);
 
 export interface Compiler {
@@ -65,58 +67,50 @@ function packageCompiler(options: PackageCompilerOptions): Compiler {
   };
 }
 
-// Every compiler that the conformance cases run against, in three groups.
-// Each group is a function, so a test file only resolves the packages it uses.
-
-/** Released TypeScript versions. These must pass. */
-export function typescriptCompilers(): Compiler[] {
-  return [
+// How to run each compiler in compiler-ids.ts. Each entry is a function,
+// so a run only resolves the package of the compiler it tests.
+const compilerFactories: Record<CompilerId, () => Compiler> = {
+  "typescript-5.9": () =>
     packageCompiler({
       label: "TypeScript 5.9",
       packageDir: packageDirOf("typescript-5"),
       bin: "tsc",
     }),
+  "typescript-6.0": () =>
     packageCompiler({
       label: "TypeScript 6.0",
       packageDir: packageDirOf("typescript-6"),
       bin: "tsc",
     }),
-    // No API check: the 7.0 API returns only `options` and `fileNames`, without errors or `raw`.
+  // No API check: the 7.0 API returns only `options` and `fileNames`, without errors or `raw`.
+  "typescript-7.0": () =>
     packageCompiler({
       label: "TypeScript 7.0",
       packageDir: packageDirOf("typescript"),
       bin: "tsc",
     }),
-  ];
-}
-
-/** Pre-release TypeScript versions. A failure here is an early warning, not a blocker. */
-export function typescriptNextCompilers(): Compiler[] {
-  return [
+  "typescript-7.1": () =>
     packageCompiler({
       label: "TypeScript 7.1 beta",
       packageDir: packageDirOf("typescript-7.1"),
       bin: "tsc",
       syncApiExport: "./sync",
     }),
-  ];
-}
-
-/** Ports of the TypeScript compiler. They are not the reference, but they should agree with it. */
-export function portCompilers(): Compiler[] {
-  return [
+  "tsc-ts": () =>
     packageCompiler({
       label: "tsc-ts (vercel-labs)",
       packageDir: packageDirOf("tsc-ts"),
       bin: "tsc-ts",
     }),
+  "tsc-rs": () =>
     packageCompiler({
       label: "tsc-rs (pingdotgg)",
       packageDir: packageDirOf("tsc-rs"),
       bin: "tsc-rs",
       syncApiExport: "./unstable/sync",
     }),
-    // Allowed through trustPolicyExclude in pnpm-workspace.yaml. See the comment there.
+  // Allowed through trustPolicyExclude in pnpm-workspace.yaml. See the comment there.
+  tsrs: () =>
     packageCompiler({
       label: "tsrs (oxc-project)",
       packageDir: packageDirOf("tsrs"),
@@ -125,5 +119,9 @@ export function portCompilers(): Compiler[] {
       // tsrs has no `--showConfig`, so it only runs through its API.
       supportsShowConfig: false,
     }),
-  ];
+};
+
+/** Builds the compiler with this id. */
+export function getCompiler(id: CompilerId): Compiler {
+  return compilerFactories[id]();
 }

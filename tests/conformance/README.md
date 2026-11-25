@@ -11,17 +11,38 @@ When both pass, tsconf-utils and the compiler agree, and the agreed result is wr
 
 ## Files
 
-| File                      | Contains                                                                     |
-| ------------------------- | ---------------------------------------------------------------------------- |
-| `cases.ts`                | The fixtures and their `expected` results. Add new cases here.               |
-| `compilers.ts`            | Every compiler, in three groups: TypeScript, TypeScript pre-releases, ports. |
-| `harness.ts`              | `describeConformance`: runs every case against one compiler.                 |
-| `normalize.ts`            | Turns any config output into the `expected` format (fixture-relative paths). |
-| `api-show-config.ts`      | Prints a resolved config through a compiler's JavaScript API.                |
-| `ours.test.ts`            | Check 1. Runs in `pnpm test`.                                                |
-| `typescript.test.ts`      | Check 2 for TypeScript 5.9, 6.0, and 7.0. `pnpm test:conformance`.           |
-| `typescript-next.test.ts` | Check 2 for the TypeScript 7.1 beta. `pnpm test:conformance:next`.           |
-| `ports.test.ts`           | Check 2 for tsc-ts, tsc-rs, and tsrs. `pnpm test:conformance:ports`.         |
+| File                 | Contains                                                                     |
+| -------------------- | ---------------------------------------------------------------------------- |
+| `cases.ts`           | The fixtures and their `expected` results. Add new cases here.               |
+| `compiler-ids.ts`    | The id of every compiler. One vitest project and one CI job per id.          |
+| `compilers.ts`       | How to run each compiler: its package, bin, and API.                         |
+| `harness.ts`         | `describeConformance`: runs every case against one compiler.                 |
+| `normalize.ts`       | Turns any config output into the `expected` format (fixture-relative paths). |
+| `api-show-config.ts` | Prints a resolved config through a compiler's JavaScript API.                |
+| `ours.test.ts`       | Check 1. Runs in `pnpm test`.                                                |
+| `compilers.test.ts`  | Check 2, for the compiler of the vitest project that runs it.                |
+
+## Running
+
+Each compiler is its own vitest project, `conformance:<id>`, and its own job in the `conformance` CI matrix.
+
+```fish
+pnpm test:conformance                              # every compiler
+pnpm vitest --run --project conformance:tsrs       # one compiler
+pnpm vitest --run --project "conformance:typescript-*"
+```
+
+| Id               | Compiler             | Role                               |
+| ---------------- | -------------------- | ---------------------------------- |
+| `typescript-5.9` | TypeScript 5.9       | reference                          |
+| `typescript-6.0` | TypeScript 6.0       | reference                          |
+| `typescript-7.0` | TypeScript 7.0       | reference                          |
+| `typescript-7.1` | TypeScript 7.1 beta  | pre-release, early warning         |
+| `tsc-ts`         | tsc-ts (vercel-labs) | port                               |
+| `tsc-rs`         | tsc-rs (pingdotgg)   | port                               |
+| `tsrs`           | tsrs (oxc-project)   | port, API only (no `--showConfig`) |
+
+Only the reference jobs should be required status checks.
 
 ## How a compiler is checked
 
@@ -48,4 +69,6 @@ For `7.1.0-beta.tsrs5`, 4 of the 8 platform packages list an attestation URL tha
 
 ## Adding a compiler
 
-Add it to a group in `compilers.ts` with `packageCompiler`. Set `syncApiExport` if it has a TypeScript 7 style sync API, and `supportsShowConfig: false` if it has no `--showConfig`.
+1. Add its id to `compiler-ids.ts`.
+2. Add how to run it to `compilers.ts` with `packageCompiler`. Set `syncApiExport` if it has a TypeScript 7 style sync API, and `supportsShowConfig: false` if it has no `--showConfig`.
+3. Add the id to the `conformance` matrix in `.github/workflows/ci.yaml`. `tests/ci-matrix.test.ts` fails until you do.

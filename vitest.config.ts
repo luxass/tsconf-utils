@@ -1,5 +1,7 @@
 import { defineConfig } from "vitest/config";
 
+import { compilerIds } from "./tests/conformance/compiler-ids";
+
 export default defineConfig({
   test: {
     projects: [
@@ -9,29 +11,17 @@ export default defineConfig({
           include: ["tests/*.test.ts", "tests/conformance/ours.test.ts"],
         },
       },
-      // The compiler half of the conformance check (see tests/conformance/README.md).
-      // These start real compilers, so they are slower and not part of `pnpm test`.
-      {
+      // The compiler half of the conformance check (see tests/conformance/README.md): one project
+      // per compiler, for example `conformance:tsrs`. They start real compilers, so they are
+      // slower and not part of `pnpm test`. CI runs each one as its own matrix job.
+      ...compilerIds.map((id) => ({
         test: {
-          name: "conformance",
-          include: ["tests/conformance/typescript.test.ts"],
+          name: `conformance:${id}`,
+          include: ["tests/conformance/compilers.test.ts"],
+          provide: { conformanceCompiler: id },
           testTimeout: 30_000,
         },
-      },
-      {
-        test: {
-          name: "conformance-next",
-          include: ["tests/conformance/typescript-next.test.ts"],
-          testTimeout: 30_000,
-        },
-      },
-      {
-        test: {
-          name: "conformance-ports",
-          include: ["tests/conformance/ports.test.ts"],
-          testTimeout: 30_000,
-        },
-      },
+      })),
     ],
   },
 });

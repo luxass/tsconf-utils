@@ -41,9 +41,7 @@
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "typecheck": "tsc --noEmit",
-    "test:conformance": "vitest --run --project conformance",
-    "test:conformance:next": "vitest --run --project conformance-next",
-    "test:conformance:ports": "vitest --run --project conformance-ports"
+    "test:conformance": "vitest --run --project \"conformance:*\""
   },
   "dependencies": {
     "effect": "catalog:runtime",
