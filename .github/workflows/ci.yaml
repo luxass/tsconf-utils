@@ -12,7 +12,7 @@ permissions: {}
 
 jobs:
   ci:
-    uses: luxass/shared-workflows/.github/workflows/reusable-ci.yaml@10298e06aecc428b39ef4121636400396b53a1fa # v0.16.0
+    uses: luxass/shared-workflows/.github/workflows/reusable-ci.yaml@411fe8f8a0a53eab5153356ac5e0f174cd245eb2 # v0.17.1
     permissions:
       contents: read
     with:
@@ -25,7 +25,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-    uses: luxass/shared-workflows/.github/workflows/reusable-test.yaml@10298e06aecc428b39ef4121636400396b53a1fa # v0.16.0
+    uses: luxass/shared-workflows/.github/workflows/reusable-test.yaml@411fe8f8a0a53eab5153356ac5e0f174cd245eb2 # v0.17.1
     permissions:
       contents: read
     with:
@@ -49,7 +49,7 @@ jobs:
           - tsc-ts
           - tsc-rs
           - tsrs
-    uses: luxass/shared-workflows/.github/workflows/reusable-test.yaml@10298e06aecc428b39ef4121636400396b53a1fa # v0.16.0
+    uses: luxass/shared-workflows/.github/workflows/reusable-test.yaml@411fe8f8a0a53eab5153356ac5e0f174cd245eb2 # v0.17.1
     permissions:
       contents: read
     with:
